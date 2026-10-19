@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Evobrinque — Protótipo v1.5.3</title>
+<title>Evobrinque — Protótipo v1.6.0</title>
 <style>
 :root{--blue:#1859c9;--navy:#153178;--green:#0dbb68;--bg:#f3f8ff;--pink:#f96aab;--shadow:0 6px 22px #24447818}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--navy);font-family:system-ui,-apple-system,Segoe UI,sans-serif}.app{max-width:520px;min-height:100dvh;margin:auto;background:linear-gradient(#e4f5ff,#fff 300px);padding:18px 16px 30px}.brand{font-size:29px;font-weight:1000;letter-spacing:-1px;text-align:center;color:#1379df;text-shadow:1px 2px #fff}.brand span{color:#f05c6d}.tag{text-align:center;font-size:10px;font-weight:800;letter-spacing:2px;color:#647aa8}.top{display:flex;align-items:center;gap:10px;margin:18px 0}.back{border:0;background:white;border-radius:14px;padding:10px 13px;color:var(--navy);font-size:20px;box-shadow:var(--shadow)}h1{font-size:25px;margin:10px 0}h2{font-size:19px;margin:0 0 10px}.card{background:white;border-radius:22px;padding:18px;box-shadow:var(--shadow);margin:14px 0}.hero{background:linear-gradient(115deg,#e9f5ff,#fff5dc);text-align:center}.hero .art{font-size:62px;line-height:1.4}.hero p{margin:8px 0;color:#61739a}.status{display:flex;align-items:center;justify-content:space-between;gap:10px}.status button{border:0;border-radius:999px;background:#d8f9e8;color:#087945;padding:10px 14px;font-weight:800}.status button.closed{background:#ffe6e8;color:#ab2d41}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.tile{border:0;border-radius:20px;min-height:134px;padding:15px 8px;background:#e6f1ff;color:var(--navy);font-weight:900;font-size:16px;box-shadow:var(--shadow);position:relative}.tile:nth-child(2){background:#fff0f7}.tile:nth-child(3){background:#e9faee}.tile:nth-child(4){background:#f3ebff}.emoji{display:block;font-size:40px;margin-bottom:8px}.count{position:absolute;top:8px;right:10px;background:#f3426c;color:#fff;border-radius:999px;padding:3px 8px;font-size:12px}.button{border:0;border-radius:16px;background:var(--green);color:white;font-weight:900;padding:14px 18px;font-size:16px;width:100%;margin-top:10px}.secondary{background:#e8f1ff;color:var(--blue)}.muted{color:#64769c;font-size:13px}.item{display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid #e8edf5}.item:last-child{border-bottom:0}.pic{font-size:36px;background:#eff6ff;border-radius:14px;padding:10px}.grow{flex:1}.item b{display:block}.item small{color:#63769a}.tabs{display:flex;gap:6px}.tab{flex:1;border:0;background:#eaf1fa;border-radius:12px;padding:11px 5px;color:var(--navy);font-weight:800;font-size:12px}.tab.active{background:var(--blue);color:white}.statrow{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.stat{background:#f0f7ff;border-radius:16px;padding:12px 5px;text-align:center}.stat strong{display:block;font-size:20px}.stat small{font-size:11px;color:#61739a}.swatches{display:flex;gap:8px;flex-wrap:wrap}.swatch{height:35px;width:35px;border-radius:50%;border:3px solid white;box-shadow:0 0 0 1px #d4dfef}.swatch.selected{outline:3px solid #123e91}input{width:100%;border:2px solid #dce6f5;border-radius:12px;padding:12px;font:inherit;color:var(--navy)}label{display:block;font-weight:800;margin-bottom:6px}.foot{text-align:center;color:#8393b0;font-size:12px;margin-top:26px}.hide{display:none}.tiny{font-size:12px;color:#6d7e9d}
 /* V1.1: tela inicial compacta, sem rolagem na maioria dos celulares */
@@ -76,6 +76,8 @@
 .modal-card p{line-height:1.5;color:#64769c}
 .modal-card .button{margin-top:9px}
 
+/* V1.6 — acesso administrativo Supabase */
+.admin-login{border:2px solid #dceafd;background:#f7fbff}.admin-login h2{margin-bottom:8px}.admin-login .field{margin:10px 0}.admin-login .button{margin-top:8px}.admin-error{color:#a32446;font-size:13px;font-weight:750;min-height:18px}.admin-ok{color:#087945;font-size:13px;font-weight:750}.admin-login input{background:white}
 /* V1.5.3 — vitrine remota em modo de consulta */
 .remote-panel{grid-column:1/-1}.remote-panel .note{margin:0}.remote-caption{grid-column:1/-1;font-size:12px;color:#64769c;margin:0 0 3px}.remote-shop-card .button{margin-top:auto}
 /* V1.5.2 — personalização apenas na experiência de compra */
@@ -112,7 +114,66 @@ function remotePanelHTML(){
  if(!remoteProducts.length)return '<div class="card remote-panel"><p class="muted">Ainda não há produtos ativos no banco online.</p></div>';
  return '<p class="remote-caption">☁️ Produtos online · Visualização de teste (compras online ainda indisponíveis)</p>'+remoteProducts.map(p=>`<article class="shop-card remote-shop-card"><div class="shop-emoji">📦</div><b>${escapeHTML(p.name)}</b><strong>${money(p.price)}</strong><small class="muted">${p.stock>0?'Disponível: '+p.stock+' un.':'Esgotado'}</small><button class="button" disabled>Compra online em breve</button></article>`).join('');
 }
-function updateRemotePanel(){const panel=document.getElementById('remote-products');if(panel)panel.innerHTML=remotePanelHTML();}
+function updateRemotePanel(){const panel=document.getElementById('remote-products');if(panel)panel.innerHTML=remotePanelHTML();if(page==='products'&&document.getElementById('remote-admin-message'))render();}
+// V1.6: autenticação administrativa; senha nunca é armazenada.
+const ADMIN_USER_ID='049b07ca-d164-4279-a74f-871cf2f6436f';
+let adminAccessToken=null,adminEmail='';
+function adminPanelHTML(){
+ if(adminAccessToken)return `<section class="card admin-login"><h2>🔐 Acesso administrativo</h2><p class="admin-ok">✅ Conectado${adminEmail?' como '+escapeHTML(adminEmail):''}.</p><p class="muted">Login ativo. Agora você pode gerenciar os produtos online abaixo. Os produtos antigos deste aparelho continuam separados.</p><button class="button secondary" onclick="adminLogout()">Sair da conta</button></section>`;
+ return `<section class="card admin-login"><h2>🔐 Acesso administrativo</h2><p class="muted">Entre com a conta administrativa já criada no Supabase. Os produtos locais continuam funcionando normalmente.</p><form onsubmit="adminLogin(event)"><div class="field"><label for="admin-email">E-mail</label><input id="admin-email" type="email" autocomplete="username" required maxlength="254" placeholder="E-mail da conta administrativa"></div><div class="field"><label for="admin-password">Senha</label><input id="admin-password" type="password" autocomplete="current-password" required placeholder="Senha da conta administrativa"></div><p class="admin-error" id="admin-error" role="alert"></p><button class="button" id="admin-submit" type="submit">Entrar como administrador</button></form><p class="tiny">A senha não é salva neste aparelho.</p></section>`;
+}
+async function adminLogin(event){
+ event.preventDefault();
+ const email=document.getElementById('admin-email')?.value.trim();
+ const password=document.getElementById('admin-password')?.value;
+ const error=document.getElementById('admin-error');
+ const button=document.getElementById('admin-submit');
+ if(!email||!password||!error||!button)return;
+ button.disabled=true;button.textContent='Verificando acesso...';error.textContent='';
+ try{
+  const response=await fetch(SUPABASE_URL+'/auth/v1/token?grant_type=password',{method:'POST',headers:{'apikey':SUPABASE_PUBLISHABLE_KEY,'Content-Type':'application/json'},body:JSON.stringify({email,password}),cache:'no-store'});
+  const result=await response.json();
+  if(!response.ok||!result.access_token)throw new Error('Não foi possível entrar. Confira o e-mail e a senha.');
+  const who=await fetch(SUPABASE_URL+'/auth/v1/user',{headers:{'apikey':SUPABASE_PUBLISHABLE_KEY,'Authorization':'Bearer '+result.access_token},cache:'no-store'});
+  if(!who.ok)throw new Error('Não foi possível confirmar a conta.');
+  const user=await who.json();
+  if(user.id!==ADMIN_USER_ID)throw new Error('Esta conta não possui permissão de administração.');
+  adminAccessToken=result.access_token;adminEmail=user.email||email;
+  render();loadRemoteProducts();
+ }catch(e){error.textContent=e instanceof TypeError?'Sem conexão com o Supabase. Tente novamente.':e.message;button.disabled=false;button.textContent='Entrar como administrador';}
+}
+function adminLogout(){adminAccessToken=null;adminEmail='';render();}
+// V1.7: administração de produtos compartilhados. Não altera pedidos ou produtos locais.
+let remoteEditId=null,remoteBusy=false,remoteMessage='';
+function remoteAdminHTML(){
+ if(!adminAccessToken)return '<div class="card"><h2>☁️ Produtos compartilhados</h2><p class="muted">Entre como administrador acima para cadastrar e editar produtos online.</p></div>';
+ const list=remoteProducts.map(p=>`<div class="item"><div class="pic">📦</div><div class="grow"><b>${escapeHTML(p.name)}</b><small>${money(p.price)} · Estoque: ${p.stock}</small></div><button class="product-action" onclick="remoteStartEdit(${Number(p.id)})">Editar ›</button></div>`).join('');
+ const editing=remoteProducts.find(p=>p.id===remoteEditId);
+ return `<section class="card"><h2>☁️ Produtos compartilhados</h2><p class="muted">Esses produtos aparecem na vitrine de todos os aparelhos. Compras online ainda estão desativadas.</p><p id="remote-admin-message" class="note" role="status">${escapeHTML(remoteMessage||'As fotos ainda não são enviadas para o Supabase nesta etapa.')}</p>${remoteStatus==='loading'?'<p class="muted">Carregando produtos...</p>':remoteStatus==='error'?'<p class="inline-warn">Falha ao carregar produtos online. Não cadastre novamente antes de conferir.</p>':list||'<p class="muted">Nenhum produto ativo online.</p>'}<button class="button secondary" onclick="loadRemoteProducts()">🔄 Atualizar lista online</button><h2 style="margin-top:22px">${editing?'Editar produto online':'Novo produto online'}</h2><div class="field"><label for="remote-name">Nome</label><input id="remote-name" maxlength="80" value="${editing?escapeHTML(editing.name):''}" placeholder="Ex.: Suco de uva"></div><div class="field"><label for="remote-price">Preço de brincadeira (R$)</label><input id="remote-price" type="number" min="0" max="999999" step="0.01" value="${editing?editing.price:''}"></div><div class="field"><label for="remote-stock">Estoque</label><input id="remote-stock" type="number" min="0" max="999999" step="1" value="${editing?editing.stock:0}"></div><button class="button" id="remote-save" onclick="remoteSave()" ${remoteBusy?'disabled':''}>💾 ${editing?'Salvar alterações online':'Cadastrar online'}</button>${editing?'<button class="button secondary" onclick="remoteCancelEdit()">Cancelar edição</button>':''}<p class="tiny">O cadastro local abaixo não é alterado automaticamente.</p></section>`;
+}
+function remoteStartEdit(id){remoteEditId=id;remoteMessage='';render();document.getElementById('remote-name')?.focus()}
+function remoteCancelEdit(){remoteEditId=null;remoteMessage='';render()}
+async function remoteSave(){
+ if(remoteBusy||!adminAccessToken)return;
+ const name=document.getElementById('remote-name')?.value.trim();
+ const priceText=document.getElementById('remote-price')?.value;
+ const stockText=document.getElementById('remote-stock')?.value;
+ const msg=document.getElementById('remote-admin-message');
+ if(!name||name.length>80||priceText===''||!validPrice(priceText)||stockText===''||!validQty(stockText)){if(msg)msg.textContent='Confira nome, preço (até duas casas) e estoque inteiro.';return}
+ if(remoteStatus!=='ready'){if(msg)msg.textContent='Atualize a lista online antes de salvar.';return}
+ if(remoteEditId===null&&remoteProducts.some(p=>p.name.trim().toLocaleLowerCase('pt-BR')===name.toLocaleLowerCase('pt-BR'))){if(msg)msg.textContent='Já existe um produto online com esse nome. Use Editar para evitar duplicação.';return}
+ const editing=remoteEditId!==null;
+ if(editing&&!remoteProducts.some(p=>p.id===remoteEditId)){if(msg)msg.textContent='Produto não encontrado. Atualize a lista.';return}
+ const button=document.getElementById('remote-save');remoteBusy=true;if(button){button.disabled=true;button.textContent='Salvando online...'}
+ try{
+  const url=SUPABASE_URL+'/rest/v1/products'+(editing?'?id=eq.'+encodeURIComponent(remoteEditId):'');
+  const response=await fetch(url,{method:editing?'PATCH':'POST',headers:{'apikey':SUPABASE_PUBLISHABLE_KEY,'Authorization':'Bearer '+adminAccessToken,'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify({name,price:Number(priceText),stock:Number(stockText),...(!editing?{is_active:true}:{})}),cache:'no-store'});
+  if(!response.ok){if(response.status===401)throw new Error('Sua sessão expirou. Saia da conta e entre novamente.');throw new Error('Não foi possível salvar no Supabase (HTTP '+response.status+').')}
+  const result=await response.json();if(!Array.isArray(result)||result.length!==1)throw new Error('Não foi possível confirmar a gravação. Atualize a lista antes de tentar novamente.');
+  remoteEditId=null;remoteMessage='✅ Produto salvo no Supabase!';await loadRemoteProducts();render();
+ }catch(e){remoteMessage=e.message||'Falha de conexão. Confira a lista antes de tentar novamente.';if(msg)msg.textContent=remoteMessage}
+ finally{remoteBusy=false;if(button){button.disabled=false;button.textContent=editing?'💾 Salvar alterações online':'💾 Cadastrar online'}}
+}
 const STORAGE_KEY='evobrinque_produtos_v12';
 const demoProducts=[{name:'Carrinho',emoji:'🚗',price:12,stock:4},{name:'Chocolate',emoji:'🍫',price:8,stock:6},{name:'Bola',emoji:'⚽',price:10,stock:2},{name:'Livro de histórias',emoji:'📚',price:18,stock:3}];
 let products=[];
@@ -267,7 +328,7 @@ let page='home',tab='Novos',opened=true,shopName='Mercadinho da Mimizinha',color
 const money=v=>Number(v).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 const root=document.getElementById('view');
 const header=name=>`<div class="top"><button class="back" onclick="go('home')" aria-label="Voltar">←</button><h1>${name}</h1></div>`;
-function go(p){page=p;render();window.scrollTo(0,0);if(p==='preview')loadRemoteProducts()}
+function go(p){page=p;render();window.scrollTo(0,0);if(p==='preview'||p==='products')loadRemoteProducts()}
 function changeTab(t){tab=t;render()}
 function toggle(){
  if(!opened){opened=true;render();return}
@@ -319,7 +380,7 @@ function performArchiveProduct(){
 }
 
 function render(){syncCart();let html='';if(page==='home')html=`<div class="home-screen"><section class="card hero"><div class="art">🏪 🧸 🚗 ⚽</div><h1>Olá, Mimizinha!</h1><p>Vamos cuidar da sua lojinha?</p></section><section class="card status"><div><b>${shopName}</b><div class="muted">${opened?'🟢 Loja aberta':'🔴 Loja fechada'}</div></div><button class="${opened?'':'closed'}" onclick="toggle()">${opened?'Fechar loja':'Abrir loja'}</button></section><section class="grid"><button class="tile" onclick="go('products')"><span class="emoji">📦</span>Produtos</button><button class="tile" onclick="go('orders')">${orders.filter(o=>o.status==='Novos').length?`<span class="count">${orders.filter(o=>o.status==='Novos').length}</span>`:''}<span class="emoji">📋</span>Pedidos</button><button class="tile" onclick="go('sales')"><span class="emoji">📊</span>Minhas vendas</button><button class="tile" onclick="go('shop')"><span class="emoji">🏪</span>Minha lojinha</button></section><button class="button secondary" onclick="go('preview')">👀 Ver minha loja</button></div>`;
-if(page==='products')html=header('Meus produtos')+`<div class="card"><input placeholder="🔎 Buscar produto" aria-label="Buscar produto" oninput="filterProducts(this.value)"><p id="feedback" class="note" hidden></p><div id="product-list">${productRows(products)}</div><button class="button" onclick="showAdd()">＋ Adicionar produto</button><p class="tiny">Produtos cadastrados: ${products.length}/100. Salvos apenas neste navegador.</p></div>`;
+if(page==='products')html=header('Meus produtos')+adminPanelHTML()+remoteAdminHTML()+`<div class="card"><h2>📱 Produtos deste aparelho</h2><input placeholder="🔎 Buscar produto" aria-label="Buscar produto" oninput="filterProducts(this.value)"><p id="feedback" class="note" hidden></p><div id="product-list">${productRows(products)}</div><button class="button" onclick="showAdd()">＋ Adicionar produto</button><p class="tiny">Produtos cadastrados: ${products.length}/100. Salvos apenas neste navegador.</p></div>`;
 if(page==='form'||page==='edit'){
  const p=page==='edit'?products.find(x=>x.id===editId):null;
  if(page==='edit'&&!p){go('products');return}
