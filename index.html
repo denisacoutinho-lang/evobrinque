@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Evobrinque — Protótipo v1.5.3</title>
+<style>
+:root{--blue:#1859c9;--navy:#153178;--green:#0dbb68;--bg:#f3f8ff;--pink:#f96aab;--shadow:0 6px 22px #24447818}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--navy);font-family:system-ui,-apple-system,Segoe UI,sans-serif}.app{max-width:520px;min-height:100dvh;margin:auto;background:linear-gradient(#e4f5ff,#fff 300px);padding:18px 16px 30px}.brand{font-size:29px;font-weight:1000;letter-spacing:-1px;text-align:center;color:#1379df;text-shadow:1px 2px #fff}.brand span{color:#f05c6d}.tag{text-align:center;font-size:10px;font-weight:800;letter-spacing:2px;color:#647aa8}.top{display:flex;align-items:center;gap:10px;margin:18px 0}.back{border:0;background:white;border-radius:14px;padding:10px 13px;color:var(--navy);font-size:20px;box-shadow:var(--shadow)}h1{font-size:25px;margin:10px 0}h2{font-size:19px;margin:0 0 10px}.card{background:white;border-radius:22px;padding:18px;box-shadow:var(--shadow);margin:14px 0}.hero{background:linear-gradient(115deg,#e9f5ff,#fff5dc);text-align:center}.hero .art{font-size:62px;line-height:1.4}.hero p{margin:8px 0;color:#61739a}.status{display:flex;align-items:center;justify-content:space-between;gap:10px}.status button{border:0;border-radius:999px;background:#d8f9e8;color:#087945;padding:10px 14px;font-weight:800}.status button.closed{background:#ffe6e8;color:#ab2d41}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.tile{border:0;border-radius:20px;min-height:134px;padding:15px 8px;background:#e6f1ff;color:var(--navy);font-weight:900;font-size:16px;box-shadow:var(--shadow);position:relative}.tile:nth-child(2){background:#fff0f7}.tile:nth-child(3){background:#e9faee}.tile:nth-child(4){background:#f3ebff}.emoji{display:block;font-size:40px;margin-bottom:8px}.count{position:absolute;top:8px;right:10px;background:#f3426c;color:#fff;border-radius:999px;padding:3px 8px;font-size:12px}.button{border:0;border-radius:16px;background:var(--green);color:white;font-weight:900;padding:14px 18px;font-size:16px;width:100%;margin-top:10px}.secondary{background:#e8f1ff;color:var(--blue)}.muted{color:#64769c;font-size:13px}.item{display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid #e8edf5}.item:last-child{border-bottom:0}.pic{font-size:36px;background:#eff6ff;border-radius:14px;padding:10px}.grow{flex:1}.item b{display:block}.item small{color:#63769a}.tabs{display:flex;gap:6px}.tab{flex:1;border:0;background:#eaf1fa;border-radius:12px;padding:11px 5px;color:var(--navy);font-weight:800;font-size:12px}.tab.active{background:var(--blue);color:white}.statrow{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.stat{background:#f0f7ff;border-radius:16px;padding:12px 5px;text-align:center}.stat strong{display:block;font-size:20px}.stat small{font-size:11px;color:#61739a}.swatches{display:flex;gap:8px;flex-wrap:wrap}.swatch{height:35px;width:35px;border-radius:50%;border:3px solid white;box-shadow:0 0 0 1px #d4dfef}.swatch.selected{outline:3px solid #123e91}input{width:100%;border:2px solid #dce6f5;border-radius:12px;padding:12px;font:inherit;color:var(--navy)}label{display:block;font-weight:800;margin-bottom:6px}.foot{text-align:center;color:#8393b0;font-size:12px;margin-top:26px}.hide{display:none}.tiny{font-size:12px;color:#6d7e9d}
+/* V1.1: tela inicial compacta, sem rolagem na maioria dos celulares */
+.app:has(.home-screen){padding-top:10px;padding-bottom:8px;min-height:100dvh;display:flex;flex-direction:column}
+.app:has(.home-screen) .brand{font-size:clamp(21px,6vw,27px);line-height:1.1}
+.app:has(.home-screen) .tag{font-size:9px;letter-spacing:1.5px}
+.home-screen{display:flex;flex-direction:column;gap:10px;flex:1;margin-top:10px}
+.home-screen .card{margin:0;padding:12px 14px;border-radius:19px}
+.home-screen .hero .art{font-size:29px;line-height:1.1;white-space:nowrap}
+.home-screen .hero h1{font-size:clamp(19px,5.5vw,24px);margin:6px 0 2px}
+.home-screen .hero p{font-size:13px;margin:0}
+.home-screen .status{min-height:64px}
+.home-screen .status b{font-size:14px}
+.home-screen .status button{font-size:12px;padding:9px 11px;white-space:nowrap}
+.home-screen .grid{flex:1;min-height:180px;grid-template-rows:1fr 1fr;gap:10px}
+.home-screen .tile{min-height:0;padding:8px 5px;font-size:clamp(13px,3.7vw,16px);border-radius:17px}
+.home-screen .emoji{font-size:clamp(27px,8vw,37px);margin-bottom:3px}
+.home-screen .button{margin-top:0;padding:11px 10px;font-size:15px}
+.app:has(.home-screen) .foot{font-size:10px;margin-top:8px}
+@media(max-height:740px){.home-screen{gap:7px;margin-top:6px}.home-screen .hero .art{font-size:24px}.home-screen .hero h1{margin:3px 0 1px}.home-screen .card{padding:9px 12px}.home-screen .status{min-height:55px}.home-screen .grid{gap:7px}.home-screen .tile{padding:5px}.home-screen .emoji{font-size:27px}.home-screen .button{padding:9px}.app:has(.home-screen) .foot{margin-top:5px}}
+@media(max-height:600px){.home-screen .hero p{display:none}.app:has(.home-screen) .foot{display:none}}
+
+/* V1.2 — cadastro e gestão de produtos */
+.field{margin:15px 0}.field label{margin-bottom:7px}.field input{background:#fff}
+.stepper{display:flex;align-items:center;gap:10px}.stepper button{border:0;border-radius:14px;background:#e5f0ff;color:var(--navy);font-size:25px;font-weight:900;min-width:51px;min-height:49px}.stepper input{text-align:center;flex:1;min-width:0}
+.product-action{border:0;background:#eaf2ff;color:var(--blue);padding:9px 11px;border-radius:12px;font-weight:800}
+.product-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.product-actions .button{font-size:14px;padding:13px 7px}
+.note{padding:12px;border-radius:13px;background:#f1f7ff;color:#566e99;font-size:13px;margin:12px 0}
+.danger{background:#fff0f2;color:#b3224c}
+/* V1.3 fotos compactadas */
+.photo-preview{height:146px;width:100%;object-fit:contain;background:#f2f7ff;border-radius:15px;border:1px dashed #c6d7ee;margin:8px 0}.photo-buttons{display:grid;grid-template-columns:1fr 1fr;gap:8px}.photo-buttons .button{font-size:14px;padding:12px 7px}.photo-thumb{width:58px;height:58px;object-fit:cover;border-radius:12px;background:#f2f7ff}.shop-photo{width:100%;height:96px;object-fit:contain;border-radius:12px;background:#f2f7ff}.photo-status{font-size:12px;color:#526c97}.pic{flex-shrink:0}.photo-remove{background:#fff0f2;color:#b3224c}
+
+/* V1.4 — vitrine e carrinho local */
+.shop-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.shop-card{background:#fff;border-radius:18px;padding:12px;box-shadow:var(--shadow);min-width:0;display:flex;flex-direction:column;gap:7px}
+.shop-card .shop-photo{height:110px;object-fit:contain}
+.shop-card .shop-emoji{display:flex;align-items:center;justify-content:center;font-size:50px;height:110px;background:#f2f7ff;border-radius:12px}
+.shop-card b{overflow-wrap:anywhere;line-height:1.2}
+.shop-card .button{font-size:13px;padding:11px 5px;margin-top:auto}
+.shop-card .button:disabled{background:#dbe2ec;color:#657592}
+.cart-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.cart-top .button{width:auto;margin:0;font-size:13px;padding:11px}
+.cart-row{display:flex;gap:10px;align-items:center;padding:13px 0;border-bottom:1px solid #e9edf4}
+.cart-row:last-child{border:0}.cart-row .photo-thumb{width:54px;height:54px}
+.cart-row .grow{min-width:0}.cart-row b{overflow-wrap:anywhere}
+.cart-qty{display:flex;align-items:center;gap:9px;margin-top:8px}
+.cart-qty button{border:0;border-radius:10px;background:#e6f1ff;color:var(--navy);font-size:20px;font-weight:900;min-width:36px;min-height:35px}
+.cart-qty strong{min-width:17px;text-align:center}
+.cart-total{display:flex;justify-content:space-between;align-items:center;padding:15px 0;font-size:19px;font-weight:900;border-top:2px solid #e5edf8}
+.cart-floating{position:sticky;bottom:12px;z-index:3;box-shadow:0 7px 25px #15317833}
+
+.cart-row{align-items:flex-start}.cart-row .grow{min-width:0;overflow:hidden}.cart-row b{display:block;overflow-wrap:anywhere;line-height:1.3}
+.cart-row small{display:block;margin-top:5px;line-height:1.4;overflow-wrap:anywhere}
+.cart-qty{flex-wrap:wrap}.cart-qty small{margin:0}.cart-qty button:disabled{background:#edf0f4;color:#a5b1c0}
+.cart-total{gap:8px;flex-wrap:wrap}.cart-total span:last-child{white-space:nowrap}
+.inline-warn{background:#fff1dc;color:#865000;border-radius:12px;padding:10px;margin:10px 0;font-size:13px;font-weight:750}
+.order-entry{padding:12px 0;border-bottom:1px solid #e5edf6}.order-entry small{display:block;color:#63769a;margin:6px 0}
+.order-line{display:flex;align-items:center;gap:10px;border-bottom:1px solid #e5edf6;padding:10px 0}.order-line .grow{min-width:0}.order-line small{display:block;color:#63769a;line-height:1.5}
+
+/* V1.5.1 — confirmações amigáveis e quantidade na vitrine */
+.shop-qty{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:auto}
+.shop-qty button{border:0;border-radius:12px;background:#e6f1ff;color:#153178;font-size:23px;font-weight:900;min-height:42px;flex:1}
+.shop-qty button:disabled{opacity:.4}
+.shop-qty strong{min-width:24px;text-align:center}
+.shop-qty-caption{text-align:center;font-size:11px;color:#64769c}
+.modal-shade{position:fixed;inset:0;background:#102c5c99;display:flex;align-items:center;justify-content:center;padding:20px;z-index:50}
+.modal-card{background:white;border-radius:23px;padding:23px;max-width:410px;width:100%;box-shadow:0 18px 60px #142a5355;text-align:center}
+.modal-card .modal-icon{font-size:40px}
+.modal-card h2{margin:12px 0}
+.modal-card p{line-height:1.5;color:#64769c}
+.modal-card .button{margin-top:9px}
+
+/* V1.5.3 — vitrine remota em modo de consulta */
+.remote-panel{grid-column:1/-1}.remote-panel .note{margin:0}.remote-caption{grid-column:1/-1;font-size:12px;color:#64769c;margin:0 0 3px}.remote-shop-card .button{margin-top:auto}
+/* V1.5.2 — personalização apenas na experiência de compra */
+.shopping-theme{--shop-accent:#1684ed;--shop-text:#ffffff}
+.shopping-theme .button:not(.secondary):not(.danger):not(:disabled){background:var(--shop-accent);color:var(--shop-text)}
+.shopping-theme .button.secondary,.shopping-theme .cart-qty button:not(:disabled),.shopping-theme .shop-qty button:not(:disabled){background:color-mix(in srgb,var(--shop-accent) 14%,white);color:#153178}
+.shopping-theme .cart-floating{background:var(--shop-accent)}
+.shopping-theme .hero{border-top:4px solid var(--shop-accent)}
+.shopping-theme .button:disabled{background:#dbe2ec;color:#657592}
+</style>
+</head><body><main class="app"><div class="brand">🛒 Evo<span>brinque</span></div><div class="tag">BRINCAR · APRENDER · CRESCER</div><div id="view"></div><div class="foot">Protótipo local · Pedidos de brincadeira · Sem compras reais</div></main>
+<script>
+// V1.5.3: chave publicável; nunca colocar chave secreta neste arquivo.
+const SUPABASE_URL='https://qulltcckmrkawsyxbfux.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY='sb_publishable_ms3LdQ7ogy3do2kuoFnn_g_408wYs3t';
+let remoteProducts=[],remoteStatus='loading',remoteRequest=0;
+async function loadRemoteProducts(){
+ const request=++remoteRequest;remoteStatus='loading';updateRemotePanel();
+ try{
+  const response=await fetch(SUPABASE_URL+'/rest/v1/products?select=id,name,price,stock,is_active&is_active=eq.true&order=id.asc',{
+   headers:{'apikey':SUPABASE_PUBLISHABLE_KEY,'Accept':'application/json'},cache:'no-store'
+  });
+  if(!response.ok)throw new Error('HTTP '+response.status);
+  const rows=await response.json();if(!Array.isArray(rows))throw new Error('Resposta inválida');
+  if(request!==remoteRequest)return;
+  remoteProducts=rows.filter(p=>p&&typeof p.name==='string'&&Number.isFinite(Number(p.price))&&Number.isInteger(Number(p.stock))&&Number(p.stock)>=0);
+  remoteStatus='ready';
+ }catch(e){if(request!==remoteRequest)return;remoteStatus='error';}
+ updateRemotePanel();
+}
+function remotePanelHTML(){
+ if(remoteStatus==='loading')return '<div class="card remote-panel"><p class="muted">🔄 Buscando produtos da lojinha compartilhada...</p></div>';
+ if(remoteStatus==='error')return '<div class="card remote-panel"><p class="muted">Não foi possível consultar os produtos online. Confira a conexão com a internet.</p><button class="button secondary" onclick="loadRemoteProducts()">Tentar novamente</button></div>';
+ if(!remoteProducts.length)return '<div class="card remote-panel"><p class="muted">Ainda não há produtos ativos no banco online.</p></div>';
+ return '<p class="remote-caption">☁️ Produtos online · Visualização de teste (compras online ainda indisponíveis)</p>'+remoteProducts.map(p=>`<article class="shop-card remote-shop-card"><div class="shop-emoji">📦</div><b>${escapeHTML(p.name)}</b><strong>${money(p.price)}</strong><small class="muted">${p.stock>0?'Disponível: '+p.stock+' un.':'Esgotado'}</small><button class="button" disabled>Compra online em breve</button></article>`).join('');
+}
+function updateRemotePanel(){const panel=document.getElementById('remote-products');if(panel)panel.innerHTML=remotePanelHTML();}
+const STORAGE_KEY='evobrinque_produtos_v12';
+const demoProducts=[{name:'Carrinho',emoji:'🚗',price:12,stock:4},{name:'Chocolate',emoji:'🍫',price:8,stock:6},{name:'Bola',emoji:'⚽',price:10,stock:2},{name:'Livro de histórias',emoji:'📚',price:18,stock:3}];
+let products=[];
+try{const saved=localStorage.getItem(STORAGE_KEY);products=saved?JSON.parse(saved):[];if(!Array.isArray(products))products=[];}catch(e){products=[];}
+let storageOK=true;
+function saveProducts(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(products));return true}catch(e){storageOK=false;return false}}
+function escapeHTML(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function newId(){return 'p'+Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
+function validQty(v){return Number.isInteger(Number(v))&&Number(v)>=0&&Number(v)<=999999}
+function validPrice(v){return Number.isFinite(Number(v))&&Number(v)>=0&&Number(v)<=999999&&Math.round(Number(v)*100)===Number(v)*100}
+let editId=null, qty=0, pendingPhoto=null;
+function photoTag(p,klass='photo-thumb'){
+ if(p.image && /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(p.image))return `<img class="${klass}" src="${p.image}" alt="Foto de ${escapeHTML(p.name)}">`;
+ return `<span aria-label="Sem foto">${p.emoji||'📦'}</span>`;
+}
+function openPhoto(which){document.getElementById(which==='camera'?'camera-input':'gallery-input').click()}
+function updatePhotoUI(){const img=document.getElementById('photo-preview');const status=document.getElementById('photo-status');const remove=document.getElementById('remove-photo');if(!img)return;
+ if(pendingPhoto){img.src=pendingPhoto;img.hidden=false;status.textContent='Foto pronta! Toque em Salvar produto para guardar.';remove.hidden=false}
+ else{img.hidden=true;img.removeAttribute('src');status.textContent='Sem foto — você pode cadastrar normalmente.';remove.hidden=true}}
+function removePhoto(){pendingPhoto=null;updatePhotoUI()}
+function loadPhoto(input){const file=input.files&&input.files[0];if(!file)return;
+ if(!file.type.startsWith('image/')){alert('Escolha uma imagem.');input.value='';return}
+ if(file.size>15*1024*1024){alert('Foto muito grande. Escolha uma imagem de até 15 MB.');input.value='';return}
+ const status=document.getElementById('photo-status');if(status)status.textContent='Preparando a foto...';
+ const reader=new FileReader();reader.onerror=()=>{alert('Não foi possível ler a foto.');updatePhotoUI()};
+ reader.onload=()=>{const img=new Image();img.onerror=()=>{alert('Formato de imagem não compatível. Tente uma foto JPG ou PNG.');updatePhotoUI()};
+ img.onload=()=>{try{const limit=420,scale=Math.min(1,limit/Math.max(img.width,img.height));const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(img.width*scale));canvas.height=Math.max(1,Math.round(img.height*scale));const ctx=canvas.getContext('2d');ctx.fillStyle='#ffffff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(img,0,0,canvas.width,canvas.height);let data=canvas.toDataURL('image/jpeg',0.68);
+ if(data.length>140000){const smaller=document.createElement('canvas');const ratio=Math.min(1,300/Math.max(canvas.width,canvas.height));smaller.width=Math.max(1,Math.round(canvas.width*ratio));smaller.height=Math.max(1,Math.round(canvas.height*ratio));smaller.getContext('2d').drawImage(canvas,0,0,smaller.width,smaller.height);data=smaller.toDataURL('image/jpeg',0.55)}
+ pendingPhoto=data;updatePhotoUI()}catch(e){alert('Não foi possível preparar a foto.');updatePhotoUI()}};img.src=reader.result};reader.readAsDataURL(file);input.value=''
+}
+
+const CART_KEY='evobrinque_carrinho_v14';
+let cart={};
+try{const raw=JSON.parse(localStorage.getItem(CART_KEY)||'{}');if(raw&&typeof raw==='object'&&!Array.isArray(raw))cart=raw}catch(e){cart={}}
+function syncCart(){
+ for(const id of Object.keys(cart)){
+  const p=products.find(x=>x.id===id);
+  if(!p||!Number.isInteger(cart[id])||cart[id]<1||p.stock<1)delete cart[id];
+  else if(cart[id]>p.stock)cart[id]=p.stock;
+ }
+ try{localStorage.setItem(CART_KEY,JSON.stringify(cart))}catch(e){}
+}
+function cartUnits(){syncCart();return Object.values(cart).reduce((a,b)=>a+b,0)}
+function cartTotal(){syncCart();return products.reduce((sum,p)=>sum+(cart[p.id]||0)*p.price,0)}
+let cartNotice='';
+function addToCart(id){
+ if(!opened){cartNotice='A lojinha está fechada.';render();return}
+ const p=products.find(x=>x.id===id);if(!p||p.stock<=0)return;
+ syncCart();if((cart[id]||0)>=p.stock){cartNotice='Todas as unidades já estão no carrinho.';render();return}
+ cart[id]=(cart[id]||0)+1;cartNotice='';syncCart();render();showMessage('Produto adicionado ao carrinho!')
+}
+function cartChange(id,delta){
+ syncCart();const p=products.find(x=>x.id===id);if(!p)return;
+ const next=(cart[id]||0)+delta;
+ if(next>p.stock){cartNotice='Você já colocou todas as unidades disponíveis no carrinho.';render();return}
+ if(next<=0)delete cart[id];else cart[id]=next;
+ cartNotice='';syncCart();render()
+}
+let confirmationAction=null;
+function askConfirm(icon,title,description,yes,no,action){
+ confirmationAction=action;
+ document.getElementById('confirm-overlay')?.remove();
+ const shade=document.createElement('div');
+ shade.className='modal-shade';shade.id='confirm-overlay';
+ shade.innerHTML=`<div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal-icon">${icon}</div><h2 id="modal-title">${escapeHTML(title)}</h2><p>${escapeHTML(description)}</p><button class="button danger" id="modal-yes">${escapeHTML(yes)}</button><button class="button secondary" id="modal-no">${escapeHTML(no)}</button></div>`;
+ document.body.appendChild(shade);
+ shade.querySelector('#modal-no').onclick=closeConfirm;
+ shade.querySelector('#modal-yes').onclick=()=>{const fn=confirmationAction;closeConfirm();if(fn)fn()};
+ shade.querySelector('#modal-no').focus();
+}
+function closeConfirm(){document.getElementById('confirm-overlay')?.remove();confirmationAction=null}
+function clearCart(){
+ if(!cartUnits())return;
+ askConfirm('🛒','Esvaziar o carrinho?',`Os ${cartUnits()} produtos serão retirados do carrinho. Você poderá adicioná-los novamente quando quiser.`,'Sim, esvaziar carrinho','Não, manter produtos',()=>{
+  cart={};syncCart();render();
+ });
+}
+function shopCards(){return products.length?products.map(p=>{
+ const q=cart[p.id]||0;
+ return `<article class="shop-card">${p.image?photoTag(p,'shop-photo'):`<div class="shop-emoji">${p.emoji||'📦'}</div>`}<b>${escapeHTML(p.name)}</b><strong>${money(p.price)}</strong><small class="muted">${p.stock>0?'Disponível: '+p.stock+' un.':'Esgotado'}</small>
+ ${q?`<div class="shop-qty"><button aria-label="Retirar uma unidade" onclick="cartChange('${p.id}',-1)">−</button><strong>${q}</strong><button aria-label="Adicionar uma unidade" onclick="addToCart('${p.id}')" ${!opened||q>=p.stock?'disabled':''}>+</button></div><div class="shop-qty-caption">${q>=p.stock?'Limite atingido':'No carrinho'}</div>`:`<button class="button" ${!opened||p.stock<=0?'disabled':''} onclick="addToCart('${p.id}')">${p.stock<=0?'Esgotado':!opened?'Loja fechada':'＋ Adicionar'}</button>`}</article>`;
+ }).join(''):'<div class="card"><p class="muted">Esta lojinha ainda não tem produtos. Cadastre um produto para começar!</p></div>'}
+function cartView(){
+ syncCart();const selected=products.filter(p=>cart[p.id]>0);
+ return header('Meu carrinho')+`<section class="card"><div class="cart-top"><h2>🛒 ${cartUnits()} ${cartUnits()===1?'item':'itens'}</h2>${selected.length?'<button class="button secondary" onclick="clearCart()">Esvaziar</button>':''}</div>
+ ${selected.length?selected.map(p=>`<div class="cart-row"><div class="pic">${photoTag(p)}</div><div class="grow"><b>${escapeHTML(p.name)}</b><small>${money(p.price)} cada · Subtotal: ${money(p.price*cart[p.id])}</small><div class="cart-qty"><button onclick="cartChange('${p.id}',-1)">−</button><strong>${cart[p.id]}</strong><button onclick="cartChange('${p.id}',1)" ${cart[p.id]>=p.stock?'disabled':''}>＋</button><small class="muted">Estoque: ${p.stock}</small></div>${cart[p.id]>=p.stock?'<div class="inline-warn">🟠 Limite do estoque atingido.</div>':''}</div></div>`).join('')+
+ `<div class="cart-total"><span>Total de brincadeira</span><span>${money(cartTotal())}</span></div>${cartNotice?`<div class="inline-warn">${escapeHTML(cartNotice)}</div>`:''}<button class="button" onclick="go('checkout')" ${!opened?'disabled':''}>${opened?'Continuar para o pedido →':'Loja fechada — pedidos indisponíveis'}</button>`:'<p class="muted">O carrinho está vazio.</p>'}
+ <button class="button secondary" onclick="go('preview')">← Voltar à vitrine</button></section>`
+}
+const ORDERS_KEY='evobrinque_pedidos_v15';
+let orders=[];
+try{const x=JSON.parse(localStorage.getItem(ORDERS_KEY)||'[]');if(Array.isArray(x))orders=x}catch(e){}
+let activeOrderId=null,checkoutError='';
+function persistOrderAndStock(nextOrders,nextProducts){
+ const oldOrders=localStorage.getItem(ORDERS_KEY),oldProducts=localStorage.getItem(STORAGE_KEY);
+ try{
+  localStorage.setItem(ORDERS_KEY,JSON.stringify(nextOrders));
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(nextProducts));
+  orders=nextOrders;products=nextProducts;return true;
+ }catch(e){
+  try{if(oldOrders===null)localStorage.removeItem(ORDERS_KEY);else localStorage.setItem(ORDERS_KEY,oldOrders);
+  if(oldProducts===null)localStorage.removeItem(STORAGE_KEY);else localStorage.setItem(STORAGE_KEY,oldProducts)}catch(ignore){}
+  return false
+ }
+}
+function confirmOrder(){
+ const buyer=(document.getElementById('buyer-name')?.value||'').trim();
+ if(buyer.length<2||buyer.length>35){checkoutError='Digite um apelido de 2 a 35 caracteres.';document.getElementById('checkout-error').textContent=checkoutError;return}
+ if(!opened){document.getElementById('checkout-error').textContent='A lojinha está fechada.';return}
+ syncCart();const selected=products.filter(p=>cart[p.id]>0);if(!selected.length){go('cart');return}
+ const copy=products.map(p=>({...p})),lines=[];
+ for(const p of selected){
+  const q=cart[p.id],item=copy.find(x=>x.id===p.id);
+  if(!Number.isInteger(q)||q<1||q>item.stock){go('cart');return}
+  item.stock-=q;lines.push({id:p.id,name:p.name,image:p.image||null,emoji:p.emoji||'📦',qty:q,price:p.price})
+ }
+ const order={id:newId(),buyer,createdAt:new Date().toISOString(),status:'Novos',items:lines,total:lines.reduce((a,l)=>a+l.qty*l.price,0)};
+ if(!persistOrderAndStock([...orders,order],copy)){document.getElementById('checkout-error').textContent='Não foi possível salvar. Confira o espaço do navegador.';return}
+ cart={};syncCart();activeOrderId=order.id;go('order-success')
+}
+function viewOrder(id){activeOrderId=id;go('order-detail')}
+function setOrderStatus(next){
+ const o=orders.find(x=>x.id===activeOrderId);if(!o)return;
+ if(!((o.status==='Novos'&&next==='Preparando')||(o.status==='Preparando'&&next==='Entregues')))return;
+ const nextOrders=orders.map(x=>x.id===o.id?{...x,status:next}:x);
+ try{localStorage.setItem(ORDERS_KEY,JSON.stringify(nextOrders));orders=nextOrders;render()}catch(e){alert('Não foi possível salvar.')}
+}
+function cancelOrder(){
+ const o=orders.find(x=>x.id===activeOrderId);if(!o||o.status==='Entregues'||o.status==='Cancelado')return;
+ askConfirm('⚠️','Cancelar este pedido?','O pedido será cancelado e os produtos voltarão para o estoque da lojinha.','Sim, cancelar pedido','Não, manter pedido',()=>performCancelOrder());return;
+}
+function performCancelOrder(){
+ const o=orders.find(x=>x.id===activeOrderId);if(!o||o.status==='Entregues'||o.status==='Cancelado')return;
+ const copy=products.map(p=>({...p}));
+ for(const l of o.items){const p=copy.find(x=>x.id===l.id);if(p)p.stock+=l.qty}
+ if(!persistOrderAndStock(orders.map(x=>x.id===o.id?{...x,status:'Cancelado'}:x),copy)){alert('Não foi possível cancelar.');return}
+ render()
+}
+function orderDetail(){
+ const o=orders.find(x=>x.id===activeOrderId);if(!o)return header('Pedido')+'<div class="card">Pedido não encontrado.</div>';
+ return header('Detalhes do pedido')+`<section class="card"><h2>🧾 Pedido #${escapeHTML(o.id.slice(-6))}</h2><p><b>Cliente:</b> ${escapeHTML(o.buyer)}</p><p><b>Status:</b> ${escapeHTML(o.status)}</p>
+ ${o.items.map(l=>`<div class="order-line"><div class="pic">${photoTag(l)}</div><div class="grow"><b>${escapeHTML(l.name)}</b><small>${l.qty} × ${money(l.price)} = ${money(l.qty*l.price)}</small></div></div>`).join('')}
+ <div class="cart-total"><span>Total</span><span>${money(o.total)}</span></div>
+ ${o.status==='Novos'?`<button class="button" onclick="setOrderStatus('Preparando')">Começar a preparar</button>`:''}
+ ${o.status==='Preparando'?`<button class="button" onclick="setOrderStatus('Entregues')">Marcar como entregue</button>`:''}
+ ${o.status==='Entregues'?'<div class="note">🎉 Pedido entregue!</div>':''}
+ ${o.status==='Cancelado'?'<div class="note">Pedido cancelado.</div>':''}
+ ${['Novos','Preparando'].includes(o.status)?'<button class="button danger" onclick="cancelOrder()">Cancelar pedido</button>':''}
+ <button class="button secondary" onclick="go('orders')">← Voltar aos pedidos</button></section>`
+}
+let page='home',tab='Novos',opened=true,shopName='Mercadinho da Mimizinha',color='#1684ed',symbol='🧸';
+const money=v=>Number(v).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const root=document.getElementById('view');
+const header=name=>`<div class="top"><button class="back" onclick="go('home')" aria-label="Voltar">←</button><h1>${name}</h1></div>`;
+function go(p){page=p;render();window.scrollTo(0,0);if(p==='preview')loadRemoteProducts()}
+function changeTab(t){tab=t;render()}
+function toggle(){
+ if(!opened){opened=true;render();return}
+ askConfirm('🏪','Fechar a lojinha?','Os clientes poderão ver os produtos, mas não poderão fazer novos pedidos até você abrir a lojinha novamente.','Sim, fechar lojinha','Não, manter aberta',()=>{opened=false;render()});
+}
+function changeQty(delta){const el=document.getElementById('stock');if(!el)return;let n=Number(el.value)||0;el.value=Math.max(0,Math.min(999999,n+delta))}
+function showAdd(){editId=null;qty=0;pendingPhoto=null;go('form')}
+function showEdit(id){editId=id;pendingPhoto=(products.find(p=>p.id===id)||{}).image||null;go('edit')}
+function submitProduct(){
+ const name=document.getElementById('product-name').value.trim();
+ const priceText=document.getElementById('product-price').value.replace(',','.');
+ const stockText=document.getElementById('stock').value;
+ if(!name||name.length>80){alert('Digite o nome do produto (até 80 caracteres).');return}
+ if(priceText===''||!validPrice(priceText)){alert('Informe um preço válido, com até duas casas decimais.');return}
+ if(!validQty(stockText)){alert('Informe uma quantidade inteira de 0 a 999999.');return}
+ const before=JSON.stringify(products);
+ if(editId){const p=products.find(x=>x.id===editId);if(!p)return;p.name=name;p.price=Number(priceText);p.stock=Number(stockText);p.image=pendingPhoto||null}
+ else{if(products.length>=100){alert('A lojinha já tem 100 produtos ativos.');return}products.push({id:newId(),name,price:Number(priceText),stock:Number(stockText),emoji:'📦',image:pendingPhoto||null})}
+ if(!saveProducts()){products=JSON.parse(before);alert('Não foi possível salvar. O espaço de armazenamento pode estar cheio. Tente uma foto diferente ou cadastre sem foto.');return}
+ go('products');showMessage('Oba! Produto salvo na lojinha!')
+}
+function showMessage(s){const box=document.getElementById('feedback');if(box){box.textContent=s;box.hidden=false}}
+function addStock(){
+ const el=document.getElementById('received');const n=Number(el.value);
+ if(!validQty(el.value)||el.value===''||n===0){alert('Informe quantas unidades chegaram (número maior que zero).');return}
+ const p=products.find(x=>x.id===editId);if(!p)return;
+ if(p.stock+n>999999){alert('Quantidade muito alta.');return}
+ p.stock+=n;if(!saveProducts()){alert('Não foi possível salvar.');return}
+ render();showMessage('Estoque atualizado! Agora são '+p.stock+' unidades.')
+}
+function correctStock(){
+ const p=products.find(x=>x.id===editId);if(!p)return;
+ const raw=prompt('Qual é o estoque total correto?',String(p.stock));
+ if(raw===null)return;if(!validQty(raw)||raw===''){alert('Digite uma quantidade inteira válida.');return}
+ p.stock=Number(raw);if(!saveProducts()){alert('Não foi possível salvar.');return}
+ render();showMessage('Estoque corrigido para '+p.stock+' unidades.')
+}
+function archiveProduct(){
+ const p=products.find(x=>x.id===editId);if(!p)return;
+ askConfirm('📁','Arquivar '+p.name+'?','O produto sairá da lojinha, mas o histórico das vendas será preservado.','Sim, arquivar produto','Não, manter produto',()=>performArchiveProduct());return;
+}
+function performArchiveProduct(){
+ const p=products.find(x=>x.id===editId);if(!p)return;
+ products=products.filter(x=>x.id!==editId);
+ // V1.2: manter histórico local dos produtos arquivados.
+ try{const key='evobrinque_arquivados_v12';let old=JSON.parse(localStorage.getItem(key)||'[]');old.push({...p,archivedAt:new Date().toISOString()});localStorage.setItem(key,JSON.stringify(old));}catch(e){alert('Não foi possível arquivar neste navegador.');return}
+ if(!saveProducts()){alert('Não foi possível salvar.');return}
+ go('products');showMessage('Produto arquivado. Seu registro foi preservado.')
+}
+
+function render(){syncCart();let html='';if(page==='home')html=`<div class="home-screen"><section class="card hero"><div class="art">🏪 🧸 🚗 ⚽</div><h1>Olá, Mimizinha!</h1><p>Vamos cuidar da sua lojinha?</p></section><section class="card status"><div><b>${shopName}</b><div class="muted">${opened?'🟢 Loja aberta':'🔴 Loja fechada'}</div></div><button class="${opened?'':'closed'}" onclick="toggle()">${opened?'Fechar loja':'Abrir loja'}</button></section><section class="grid"><button class="tile" onclick="go('products')"><span class="emoji">📦</span>Produtos</button><button class="tile" onclick="go('orders')">${orders.filter(o=>o.status==='Novos').length?`<span class="count">${orders.filter(o=>o.status==='Novos').length}</span>`:''}<span class="emoji">📋</span>Pedidos</button><button class="tile" onclick="go('sales')"><span class="emoji">📊</span>Minhas vendas</button><button class="tile" onclick="go('shop')"><span class="emoji">🏪</span>Minha lojinha</button></section><button class="button secondary" onclick="go('preview')">👀 Ver minha loja</button></div>`;
+if(page==='products')html=header('Meus produtos')+`<div class="card"><input placeholder="🔎 Buscar produto" aria-label="Buscar produto" oninput="filterProducts(this.value)"><p id="feedback" class="note" hidden></p><div id="product-list">${productRows(products)}</div><button class="button" onclick="showAdd()">＋ Adicionar produto</button><p class="tiny">Produtos cadastrados: ${products.length}/100. Salvos apenas neste navegador.</p></div>`;
+if(page==='form'||page==='edit'){
+ const p=page==='edit'?products.find(x=>x.id===editId):null;
+ if(page==='edit'&&!p){go('products');return}
+ const isEdit=!!p;
+ html=header(isEdit?'Editar produto':'Adicionar produto')+`<section class="card">
+ <div class="note">📷 Foto opcional. Você pode tirar uma foto ou escolher da galeria.</div>
+ <div class="field"><label>Foto do produto</label><img id="photo-preview" class="photo-preview" alt="Prévia da foto" hidden><div class="photo-buttons"><button class="button secondary" onclick="openPhoto('camera')">📷 Tirar foto</button><button class="button secondary" onclick="openPhoto('gallery')">🖼️ Galeria</button></div><input id="camera-input" type="file" accept="image/*" capture="environment" style="display:none" onchange="loadPhoto(this)"><input id="gallery-input" type="file" accept="image/*" style="display:none" onchange="loadPhoto(this)"><p id="photo-status" class="photo-status">Sem foto — você pode cadastrar normalmente.</p><button id="remove-photo" class="button photo-remove" onclick="removePhoto()" hidden>Remover foto</button></div>
+ <div class="field"><label for="product-name">Nome do produto</label><input id="product-name" maxlength="80" placeholder="Ex.: Arroz, bola, carrinho..." value="${isEdit?escapeHTML(p.name):''}"></div>
+ <div class="field"><label for="product-price">Preço de brincadeira (R$)</label><input id="product-price" type="number" inputmode="decimal" min="0" max="999999" step="0.01" placeholder="Ex.: 12,50" value="${isEdit?p.price:''}"></div>
+ <div class="field"><label for="stock">Quantidade em estoque</label><div class="stepper"><button onclick="changeQty(-1)" aria-label="Diminuir quantidade">−</button><input id="stock" type="number" inputmode="numeric" min="0" max="999999" step="1" value="${isEdit?p.stock:0}"><button onclick="changeQty(1)" aria-label="Aumentar quantidade">+</button></div></div>
+ <button class="button" onclick="submitProduct()">💾 ${isEdit?'Salvar alterações':'Salvar produto'}</button>
+ ${isEdit?`<hr style="border:0;border-top:1px solid #e6edf7;margin:20px 0"><h2>📦 Repor estoque</h2><p class="muted">Digite quantas unidades chegaram. Elas serão somadas ao estoque atual (${p.stock}).</p><div class="field"><input id="received" type="number" inputmode="numeric" min="1" step="1" placeholder="Unidades recebidas"></div><button class="button secondary" onclick="addStock()">＋ Repor estoque</button><div class="product-actions"><button class="button secondary" onclick="correctStock()">✏️ Corrigir quantidade</button><button class="button danger" onclick="archiveProduct()">📁 Arquivar produto</button></div>`:''}
+ <p id="feedback" class="note" hidden></p>
+ </section>`;
+}
+if(page==='checkout')html=header('Confirmar pedido')+`<section class="card"><h2>🛒 Quase lá!</h2><p class="muted">Informe seu apelido para identificar o pedido de brincadeira.</p><div class="field"><label for="buyer-name">Seu apelido</label><input id="buyer-name" maxlength="35" placeholder="Ex.: Papai, Vovó, Tia Ana"></div><p id="checkout-error" class="inline-warn" aria-live="polite"></p><div class="cart-total"><span>Total</span><span>${money(cartTotal())}</span></div><button class="button" onclick="confirmOrder()">Confirmar pedido de brincadeira</button><button class="button secondary" onclick="go('cart')">← Voltar ao carrinho</button><p class="tiny">Nenhum pagamento real.</p></section>`;
+if(page==='order-success')html=header('Pedido confirmado')+`<section class="card hero"><div class="art">🎉🛒</div><h2>Pedido enviado!</h2><p>A Mimizinha já pode preparar os produtos.</p><button class="button" onclick="viewOrder(activeOrderId)">Ver meu pedido</button><button class="button secondary" onclick="go('home')">Voltar ao início</button></section>`;
+if(page==='orders')html=header('Meus pedidos')+`<div class="card"><div class="tabs">${['Novos','Preparando','Entregues'].map(t=>`<button class="tab ${tab===t?'active':''}" onclick="changeTab('${t}')">${t}</button>`).join('')}</div>${orders.filter(o=>o.status===tab).map(o=>`<div class="order-entry"><b>Pedido #${escapeHTML(o.id.slice(-6))}</b><small>${escapeHTML(o.buyer)} · ${o.items.reduce((a,l)=>a+l.qty,0)} unidades · ${money(o.total)}</small><button class="button secondary" onclick="viewOrder('${o.id}')">Ver pedido →</button></div>`).join('')||'<p class="muted">Nenhum pedido nesta etapa.</p>'}</div>`;
+if(page==='order-detail')html=orderDetail();
+if(page==='sales'){const delivered=orders.filter(o=>o.status==='Entregues'),units=delivered.reduce((a,o)=>a+o.items.reduce((b,l)=>b+l.qty,0),0),total=delivered.reduce((a,o)=>a+o.total,0);html=header('Minhas vendas')+`<div class="card"><div class="statrow"><div class="stat"><strong>${delivered.length}</strong><small>Pedidos entregues</small></div><div class="stat"><strong>${units}</strong><small>Produtos vendidos</small></div><div class="stat"><strong>${money(total)}</strong><small>Dinheiro de brincadeira</small></div></div><h2 style="margin-top:24px">Histórico</h2>${delivered.map(o=>`<div class="order-entry"><b>🎉 ${escapeHTML(o.buyer)}</b><small>${o.items.reduce((a,l)=>a+l.qty,0)} unidades · ${money(o.total)}</small><button class="button secondary" onclick="viewOrder('${o.id}')">Ver pedido</button></div>`).join('')||'<p class="muted">As vendas aparecem aqui quando os pedidos forem entregues.</p>'}<p class="tiny">Valores fictícios.</p></div>`}
+if(page==='shop')html=header('Minha lojinha')+`<div class="card"><label for="shopname">Nome da loja</label><input id="shopname" maxlength="40" value="${shopName.replaceAll('"','&quot;')}" oninput="shopName=this.value"><h2 style="margin-top:20px">Cor principal</h2><div class="swatches">${['#1684ed','#ed579d','#18b76b','#ffbd2e','#9459e9','#f16c37'].map(c=>`<button class="swatch ${c===color?'selected':''}" style="background:${c}" aria-label="Escolher cor" onclick="color='${c}';render()"></button>`).join('')}</div><h2 style="margin-top:20px">Símbolo</h2><div class="swatches">${['🧸','🚀','⚽','⭐','🎮','🌈'].map(s=>`<button class="swatch ${s===symbol?'selected':''}" style="width:49px;height:49px;font-size:23px" onclick="symbol='${s}';render()">${s}</button>`).join('')}</div><button class="button" onclick="go('home')">Salvar alterações</button></div>`;
+if(page==='preview'){syncCart();html=header('Minha vitrine')+`<section class="card hero"><div class="art">${symbol} 🏪</div><h2>${escapeHTML(shopName)}</h2><p>${opened?'🟢 Aberta para compras de brincadeira':'🔴 Fechada no momento'}</p></section><div class="cart-top" style="margin:14px 0"><h2>Produtos da lojinha</h2><button class="button secondary" onclick="go('cart')">🛒 Carrinho (${cartUnits()})</button></div><p id="feedback" class="note" hidden></p><div id="remote-products" class="shop-grid">${remotePanelHTML()}</div><p class="remote-caption" style="margin-top:18px">📱 Produtos deste aparelho · Compras de teste locais</p><div class="shop-grid">${shopCards()}</div>${cartUnits()?`<button class="button cart-floating" onclick="go('cart')">🛒 Ver carrinho · ${cartUnits()} ${cartUnits()===1?'item':'itens'} · ${money(cartTotal())}</button>`:''}<p class="tiny">Os produtos online são apenas para consulta. Pedidos e estoque das compras locais permanecem neste navegador.</p>`}
+if(page==='cart')html=cartView();
+root.classList.toggle('shopping-theme',['preview','cart','checkout','order-success'].includes(page));
+root.style.setProperty('--shop-accent',color);
+root.style.setProperty('--shop-text',color==='#ffbd2e'?'#153178':'#ffffff');
+root.innerHTML=html;if(page==='form'||page==='edit')updatePhotoUI()}
+function productRows(list){return list.length?list.map(p=>`<div class="item"><div class="pic">${photoTag(p)}</div><div class="grow"><b>${escapeHTML(p.name)}</b><small>${money(p.price)} · Estoque: ${p.stock}</small></div><button class="product-action" onclick="showEdit('${p.id}')">Editar ›</button></div>`).join(''):'<p class="muted">Nenhum produto por aqui. Que tal cadastrar o primeiro?</p>'}
+function filterProducts(q){document.getElementById('product-list').innerHTML=productRows(products.filter(p=>p.name.toLowerCase().includes(q.toLowerCase())))}
+render();
+</script></body></html>
