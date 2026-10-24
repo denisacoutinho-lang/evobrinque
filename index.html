@@ -226,6 +226,19 @@ try {
   onlineCart = {};
 }
 
+function saveOnlineCart() {
+  try {
+    localStorage.setItem(
+      ONLINE_CART_KEY,
+      JSON.stringify(onlineCart)
+    );
+    return true;
+  } catch (e) {
+    onlineCartNotice = 'Não foi possível salvar o carrinho online.';
+    return false;
+  }
+}
+
 const CART_KEY='evobrinque_carrinho_v14';
 let cart={};
 try{const raw=JSON.parse(localStorage.getItem(CART_KEY)||'{}');if(raw&&typeof raw==='object'&&!Array.isArray(raw))cart=raw}catch(e){cart={}}
