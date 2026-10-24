@@ -205,6 +205,11 @@ function loadPhoto(input){const file=input.files&&input.files[0];if(!file)return
  pendingPhoto=data;updatePhotoUI()}catch(e){alert('Não foi possível preparar a foto.');updatePhotoUI()}};img.src=reader.result};reader.readAsDataURL(file);input.value=''
 }
 
+ // V1.8 — carrinho online separado do carrinho local
+ const ONLINE_CART_KEY='evobrinque_carrinho_online_v18';
+ let onlineCart={};
+ let onlineCartNotice='';
+
 const CART_KEY='evobrinque_carrinho_v14';
 let cart={};
 try{const raw=JSON.parse(localStorage.getItem(CART_KEY)||'{}');if(raw&&typeof raw==='object'&&!Array.isArray(raw))cart=raw}catch(e){cart={}}
