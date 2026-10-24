@@ -246,6 +246,35 @@ function onlineCartUnits() {
   }, 0);
 }
 
+function addOnlineCart(productId) {
+  const product = remoteProducts.find(
+    p => Number(p.id) === Number(productId)
+  );
+
+  if (!product || Number(product.stock) <= 0) {
+    onlineCartNotice = 'Produto indisponível.';
+    return false;
+  }
+
+  const id = String(product.id);
+  const current = Number(onlineCart[id] || 0);
+
+  if (!Number.isInteger(current) || current < 0) {
+    onlineCartNotice = 'Quantidade inválida no carrinho.';
+    return false;
+  }
+
+  if (current >= Number(product.stock)) {
+    onlineCartNotice = 'Quantidade máxima disponível atingida.';
+    return false;
+  }
+
+  onlineCart[id] = current + 1;
+  onlineCartNotice = 'Produto adicionado ao carrinho!';
+  saveOnlineCart();
+  return true;
+}
+
 const CART_KEY='evobrinque_carrinho_v14';
 let cart={};
 try{const raw=JSON.parse(localStorage.getItem(CART_KEY)||'{}');if(raw&&typeof raw==='object'&&!Array.isArray(raw))cart=raw}catch(e){cart={}}
