@@ -239,6 +239,13 @@ function saveOnlineCart() {
   }
 }
 
+function onlineCartUnits() {
+  return Object.values(onlineCart).reduce((total, quantity) => {
+    const n = Number(quantity);
+    return total + (Number.isInteger(n) && n > 0 ? n : 0);
+  }, 0);
+}
+
 const CART_KEY='evobrinque_carrinho_v14';
 let cart={};
 try{const raw=JSON.parse(localStorage.getItem(CART_KEY)||'{}');if(raw&&typeof raw==='object'&&!Array.isArray(raw))cart=raw}catch(e){cart={}}
