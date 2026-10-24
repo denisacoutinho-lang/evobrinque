@@ -251,6 +251,8 @@ function addOnlineCart(productId) {
     p => Number(p.id) === Number(productId)
   );
 
+
+ 
   if (!product || Number(product.stock) <= 0) {
     onlineCartNotice = 'Produto indisponível.';
     return false;
@@ -273,6 +275,24 @@ function addOnlineCart(productId) {
   onlineCartNotice = 'Produto adicionado ao carrinho!';
   saveOnlineCart();
   return true;
+}
+
+function removeOnlineCart(productId) {
+  const id = String(productId);
+  const current = Number(onlineCart[id] || 0);
+
+  if (!Number.isInteger(current) || current <= 0) {
+    return false;
+  }
+
+  if (current === 1) {
+    delete onlineCart[id];
+  } else {
+    onlineCart[id] = current - 1;
+  }
+
+  onlineCartNotice = 'Carrinho atualizado.';
+  return saveOnlineCart();
 }
 
 const CART_KEY='evobrinque_carrinho_v14';
