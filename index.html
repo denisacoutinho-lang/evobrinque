@@ -210,6 +210,22 @@ function loadPhoto(input){const file=input.files&&input.files[0];if(!file)return
  let onlineCart={};
  let onlineCartNotice='';
 
+try {
+  const savedOnlineCart = JSON.parse(
+    localStorage.getItem(ONLINE_CART_KEY) || '{}'
+  );
+
+  if (
+    savedOnlineCart &&
+    typeof savedOnlineCart === 'object' &&
+    !Array.isArray(savedOnlineCart)
+  ) {
+    onlineCart = savedOnlineCart;
+  }
+} catch (e) {
+  onlineCart = {};
+}
+
 const CART_KEY='evobrinque_carrinho_v14';
 let cart={};
 try{const raw=JSON.parse(localStorage.getItem(CART_KEY)||'{}');if(raw&&typeof raw==='object'&&!Array.isArray(raw))cart=raw}catch(e){cart={}}
