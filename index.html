@@ -527,6 +527,21 @@ if(page==='form'||page==='edit'){
  <p id="feedback" class="note" hidden></p>
  </section>`;
 }
+if(page==='online-checkout'){
+  const selected=remoteProducts.filter(p=>Number(onlineCart[String(p.id)]||0)>0);
+  const total=selected.reduce((sum,p)=>sum+Number(p.price)*Number(onlineCart[String(p.id)]||0),0);
+  html=header('Confirmar pedido online')+
+    '<section class="card">'+
+    '<h2>🛒 Quase lá!</h2>'+
+    '<p class="muted">Informe seu apelido para identificar o pedido de brincadeira.</p>'+
+    '<div class="field"><label for="online-buyer-name">Seu apelido</label>'+
+    '<input id="online-buyer-name" maxlength="35" placeholder="Ex.: Papai, Vovó, Tia Ana"></div>'+
+    '<div class="cart-total"><span>Total de brincadeira</span><span>'+money(total)+'</span></div>'+
+    '<p class="note">Estamos preparando a confirmação dos pedidos online. Nenhum pedido será enviado nesta etapa.</p>'+
+    '<button class="button secondary" onclick="go(\'cart\')">← Voltar ao carrinho</button>'+
+    '</section>';
+}
+
 if(page==='checkout')html=header('Confirmar pedido')+`<section class="card"><h2>🛒 Quase lá!</h2><p class="muted">Informe seu apelido para identificar o pedido de brincadeira.</p><div class="field"><label for="buyer-name">Seu apelido</label><input id="buyer-name" maxlength="35" placeholder="Ex.: Papai, Vovó, Tia Ana"></div><p id="checkout-error" class="inline-warn" aria-live="polite"></p><div class="cart-total"><span>Total</span><span>${money(cartTotal())}</span></div><button class="button" onclick="confirmOrder()">Confirmar pedido de brincadeira</button><button class="button secondary" onclick="go('cart')">← Voltar ao carrinho</button><p class="tiny">Nenhum pagamento real.</p></section>`;
 if(page==='order-success')html=header('Pedido confirmado')+`<section class="card hero"><div class="art">🎉🛒</div><h2>Pedido enviado!</h2><p>A Mimizinha já pode preparar os produtos.</p><button class="button" onclick="viewOrder(activeOrderId)">Ver meu pedido</button><button class="button secondary" onclick="go('home')">Voltar ao início</button></section>`;
 if(page==='orders')html=header('Meus pedidos')+`<div class="card"><div class="tabs">${['Novos','Preparando','Entregues'].map(t=>`<button class="tab ${tab===t?'active':''}" onclick="changeTab('${t}')">${t}</button>`).join('')}</div>${orders.filter(o=>o.status===tab).map(o=>`<div class="order-entry"><b>Pedido #${escapeHTML(o.id.slice(-6))}</b><small>${escapeHTML(o.buyer)} · ${o.items.reduce((a,l)=>a+l.qty,0)} unidades · ${money(o.total)}</small><button class="button secondary" onclick="viewOrder('${o.id}')">Ver pedido →</button></div>`).join('')||'<p class="muted">Nenhum pedido nesta etapa.</p>'}</div>`;
