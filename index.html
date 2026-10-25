@@ -384,7 +384,10 @@ function onlineCartView() {
         }).join('') +
         '<div class="cart-total"><b>Total de brincadeira</b>' +
         '<b>' + money(total) + '</b></div>' +
-        '<p class="muted">A confirmação de pedidos online ainda está em desenvolvimento.</p>'
+        '
+'<p class="muted">Pedido fictício, sem pagamento real.</p>' +
+'<button class="button" onclick="go(\'online-checkout\')">Continuar para o pedido →</button>'
+'
       : '<p class="muted">O carrinho está vazio.</p>') +
     '<button class="button secondary" onclick="go(\'preview\')">' +
     '← Voltar à vitrine</button>' +
