@@ -143,6 +143,51 @@ async function adminLogin(event){
  }catch(e){error.textContent=e instanceof TypeError?'Sem conexão com o Supabase. Tente novamente.':e.message;button.disabled=false;button.textContent='Entrar como administrador';}
 }
 function adminLogout(){adminAccessToken=null;adminEmail='';render();}
+ 
+const ACTIVE_STORE_ID = 1;
+let inviteBusy = false;
+let inviteMessage = '';
+
+async function generateFamilyInvite() {
+  if (!adminAccessToken || inviteBusy) return;
+
+  inviteBusy = true;
+  inviteMessage = 'Gerando convite...';
+
+  try {
+    const response = await fetch(
+      SUPABASE_URL + '/rest/v1/rpc/create_store_invite',
+      {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_PUBLISHABLE_KEY,
+          'Authorization': 'Bearer ' + adminAccessToken,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          p_store_id: ACTIVE_STORE_ID
+        }),
+        cache: 'no-store'
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error('Não foi possível gerar o convite.');
+    }
+
+    const token = await response.json();
+
+    inviteMessage = 'Convite gerado com sucesso!';
+    console.log('Convite criado:', Boolean(token));
+
+  } catch (error) {
+    inviteMessage = error.message;
+  } finally {
+    inviteBusy = false;
+    alert(inviteMessage);
+  }
+}
+ 
 // V1.7: administração de produtos compartilhados. Não altera pedidos ou produtos locais.
 let remoteEditId=null,remoteBusy=false,remoteMessage='';
 function remoteAdminHTML(){
