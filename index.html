@@ -167,7 +167,24 @@ async function remoteSave(){
  const button=document.getElementById('remote-save');remoteBusy=true;if(button){button.disabled=true;button.textContent='Salvando online...'}
  try{
   const url=SUPABASE_URL+'/rest/v1/products'+(editing?'?id=eq.'+encodeURIComponent(remoteEditId):'');
-  const response=await fetch(url,{method:editing?'PATCH':'POST',headers:{'apikey':SUPABASE_PUBLISHABLE_KEY,'Authorization':'Bearer '+adminAccessToken,'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify({name,price:Number(priceText),stock:Number(stockText),...(!editing?{is_active:true,store_id:1}:{});
+  
+const response = await fetch(url, {
+  method: editing ? 'PATCH' : 'POST',
+  headers: {
+    'apikey': SUPABASE_PUBLISHABLE_KEY,
+    'Authorization': 'Bearer ' + adminAccessToken,
+    'Content-Type': 'application/json',
+    'Prefer': 'return=representation'
+  },
+  body: JSON.stringify({
+    name,
+    price: Number(priceText),
+    stock: Number(stockText),
+    ...(!editing ? { is_active: true, store_id: 1 } : {})
+  }),
+  cache: 'no-store'
+});
+
   if(!response.ok){if(response.status===401)throw new Error('Sua sessão expirou. Saia da conta e entre novamente.');throw new Error('Não foi possível salvar no Supabase (HTTP '+response.status+').')}
   const result=await response.json();if(!Array.isArray(result)||result.length!==1)throw new Error('Não foi possível confirmar a gravação. Atualize a lista antes de tentar novamente.');
   remoteEditId=null;remoteMessage='✅ Produto salvo no Supabase!';await loadRemoteProducts();render();
