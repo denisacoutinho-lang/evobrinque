@@ -650,5 +650,10 @@ function filterProducts(q){document.getElementById('product-list').innerHTML=pro
 const inviteTokenFromURL =
   new URLSearchParams(window.location.search).get('convite');
 
+let invitedStore = null;
+let inviteValidationStatus = inviteTokenFromURL
+  ? 'pending'
+  : 'none';
+
 render();
 </script></body></html>
