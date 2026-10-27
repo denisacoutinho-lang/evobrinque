@@ -600,7 +600,27 @@ function performArchiveProduct(){
  go('products');showMessage('Produto arquivado. Seu registro foi preservado.')
 }
 
-function render(){syncCart();let html='';if(page==='home')html=`<div class="home-screen"><section class="card hero"><div class="art">🏪 🧸 🚗 ⚽</div><h1>Olá, Mimizinha!</h1><p>Vamos cuidar da sua lojinha?</p></section><section class="card status"><div><b>${shopName}</b><div class="muted">${opened?'🟢 Loja aberta':'🔴 Loja fechada'}</div></div><button class="${opened?'':'closed'}" onclick="toggle()">${opened?'Fechar loja':'Abrir loja'}</button></section><section class="grid"><button class="tile" onclick="go('products')"><span class="emoji">📦</span>Produtos</button><button class="tile" onclick="go('orders')">${orders.filter(o=>o.status==='Novos').length?`<span class="count">${orders.filter(o=>o.status==='Novos').length}</span>`:''}<span class="emoji">📋</span>Pedidos</button><button class="tile" onclick="go('sales')"><span class="emoji">📊</span>Minhas vendas</button><button class="tile" onclick="go('shop')"><span class="emoji">🏪</span>Minha lojinha</button></section><button class="button secondary" onclick="go('preview')">👀 Ver minha loja</button></div>`;
+
+function render(){
+  if (inviteTokenFromURL) {
+    const message = inviteValidationStatus === 'pending'
+      ? 'Verificando seu convite...'
+      : inviteValidationStatus === 'valid'
+        ? 'Convite confirmado! Estamos preparando sua lojinha.'
+        : 'Este convite é inválido, expirou ou foi revogado. Peça um novo convite ao responsável.';
+
+    root.innerHTML =
+      '<section class="card">' +
+      '<h2>🔗 Convite familiar</h2>' +
+      '<p class="muted">' + message + '</p>' +
+      '</section>';
+
+    return;
+  }
+
+  syncCart();
+  let html = '';
+if(page==='home')html=`<div class="home-screen"><section class="card hero"><div class="art">🏪 🧸 🚗 ⚽</div><h1>Olá, Mimizinha!</h1><p>Vamos cuidar da sua lojinha?</p></section><section class="card status"><div><b>${shopName}</b><div class="muted">${opened?'🟢 Loja aberta':'🔴 Loja fechada'}</div></div><button class="${opened?'':'closed'}" onclick="toggle()">${opened?'Fechar loja':'Abrir loja'}</button></section><section class="grid"><button class="tile" onclick="go('products')"><span class="emoji">📦</span>Produtos</button><button class="tile" onclick="go('orders')">${orders.filter(o=>o.status==='Novos').length?`<span class="count">${orders.filter(o=>o.status==='Novos').length}</span>`:''}<span class="emoji">📋</span>Pedidos</button><button class="tile" onclick="go('sales')"><span class="emoji">📊</span>Minhas vendas</button><button class="tile" onclick="go('shop')"><span class="emoji">🏪</span>Minha lojinha</button></section><button class="button secondary" onclick="go('preview')">👀 Ver minha loja</button></div>`;
 if(page==='products')html=header('Meus produtos')+adminPanelHTML()+remoteAdminHTML()+`<div class="card"><h2>📱 Produtos deste aparelho</h2><input placeholder="🔎 Buscar produto" aria-label="Buscar produto" oninput="filterProducts(this.value)"><p id="feedback" class="note" hidden></p><div id="product-list">${productRows(products)}</div><button class="button" onclick="showAdd()">＋ Adicionar produto</button><p class="tiny">Produtos cadastrados: ${products.length}/100. Salvos apenas neste navegador.</p></div>`;
 if(page==='form'||page==='edit'){
  const p=page==='edit'?products.find(x=>x.id===editId):null;
