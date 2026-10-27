@@ -674,6 +674,9 @@ let invitedStore = null;
 let inviteValidationStatus = inviteTokenFromURL
   ? 'pending'
   : 'none';
+ 
+let familyGuestName = '';
+
 
 async function validateFamilyInvite() {
   if (!inviteTokenFromURL) return;
