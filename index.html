@@ -714,10 +714,13 @@ async function validateFamilyInvite() {
     invitedStore = result[0];
     inviteValidationStatus = 'valid';
 
-  } catch (error) {
-    invitedStore = null;
-    inviteValidationStatus = 'invalid';
-  }
+
+} catch (error) {
+  invitedStore = null;
+  inviteValidationStatus = 'invalid';
+}
+
+render();
 }
 
 render();
