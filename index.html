@@ -655,5 +655,50 @@ let inviteValidationStatus = inviteTokenFromURL
   ? 'pending'
   : 'none';
 
+async function validateFamilyInvite() {
+  if (!inviteTokenFromURL) return;
+
+  inviteValidationStatus = 'pending';
+  invitedStore = null;
+
+  try {
+    if (!/^[a-f0-9]{64}$/.test(inviteTokenFromURL)) {
+      throw new Error('Convite inválido.');
+    }
+
+    const response = await fetch(
+      SUPABASE_URL + '/rest/v1/rpc/get_invited_store',
+      {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_PUBLISHABLE_KEY,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          p_token: inviteTokenFromURL
+        }),
+        cache: 'no-store'
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error('Falha ao verificar convite.');
+    }
+
+    const result = await response.json();
+
+    if (!Array.isArray(result) || result.length !== 1) {
+      throw new Error('Convite inválido ou expirado.');
+    }
+
+    invitedStore = result[0];
+    inviteValidationStatus = 'valid';
+
+  } catch (error) {
+    invitedStore = null;
+    inviteValidationStatus = 'invalid';
+  }
+}
+
 render();
 </script></body></html>
