@@ -188,7 +188,7 @@ if (typeof token !== 'string' || !/^[a-f0-9]{64}$/.test(token)) {
 
 familyInviteToken = token;
 inviteMessage = 'Convite gerado com sucesso!';
-
+render();
 
   } catch (error) {
     inviteMessage = error.message;
