@@ -646,5 +646,9 @@ root.style.setProperty('--shop-text',color==='#ffbd2e'?'#153178':'#ffffff');
 root.innerHTML=html;if(page==='form'||page==='edit')updatePhotoUI()}
 function productRows(list){return list.length?list.map(p=>`<div class="item"><div class="pic">${photoTag(p)}</div><div class="grow"><b>${escapeHTML(p.name)}</b><small>${money(p.price)} · Estoque: ${p.stock}</small></div><button class="product-action" onclick="showEdit('${p.id}')">Editar ›</button></div>`).join(''):'<p class="muted">Nenhum produto por aqui. Que tal cadastrar o primeiro?</p>'}
 function filterProducts(q){document.getElementById('product-list').innerHTML=productRows(products.filter(p=>p.name.toLowerCase().includes(q.toLowerCase())))}
+ 
+const inviteTokenFromURL =
+  new URLSearchParams(window.location.search).get('convite');
+
 render();
 </script></body></html>
