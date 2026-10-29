@@ -678,6 +678,7 @@ let inviteValidationStatus = inviteTokenFromURL
   : 'none';
  
 let familyGuestName = '';
+ let familyGuestEntered = false;
  function enterFamilyShop() {
   if (inviteValidationStatus !== 'valid' || !invitedStore) return;
 
