@@ -95,9 +95,10 @@ const SUPABASE_URL='https://qulltcckmrkawsyxbfux.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY='sb_publishable_ms3LdQ7ogy3do2kuoFnn_g_408wYs3t';
 let remoteProducts=[],remoteStatus='loading',remoteRequest=0;
 async function loadRemoteProducts(){
+ const storeId = inviteTokenFromURL && invitedStore ? invitedStore.store_id : ACTIVE_STORE_ID;
  const request=++remoteRequest;remoteStatus='loading';updateRemotePanel();
  try{
-  const response=await fetch(SUPABASE_URL+'/rest/v1/products?select=id,name,price,stock,is_active&is_active=eq.true&order=id.asc',{
+  const response=await fetch(SUPABASE_URL+'/rest/v1/products?select=id,name,price,stock,is_active&is_active=eq.true&store_id=eq.'+encodeURIComponent(storeId)+'&order=id.asc',{
    headers:{'apikey':SUPABASE_PUBLISHABLE_KEY,'Accept':'application/json'},cache:'no-store'
   });
   if(!response.ok)throw new Error('HTTP '+response.status);
