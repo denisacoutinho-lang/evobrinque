@@ -611,8 +611,10 @@ function render(){
 
     root.innerHTML =
       '<section class="card">' +
-      '<h2>🔗 Convite familiar</h2>' +
+      '<h2>🏪 ' + (inviteValidationStatus === 'valid' && invitedStore ? escapeHTML(invitedStore.store_name) : 'Convite familiar') + '</h2>' +
       '<p class="muted">' + message + '</p>' +
+     (inviteValidationStatus === 'valid' ? '<div class="field"><label for="family-guest-name">Como podemos te chamar?</label><input id="family-guest-name" maxlength="35" placeholder="Digite seu nome ou apelido"></div>' : '') +
+     (inviteValidationStatus === 'valid' ? '<button class="button" onclick="enterFamilyShop()">Entrar na lojinha</button>' : '') +
       '</section>';
 
     return;
@@ -676,6 +678,19 @@ let inviteValidationStatus = inviteTokenFromURL
   : 'none';
  
 let familyGuestName = '';
+ function enterFamilyShop() {
+  if (inviteValidationStatus !== 'valid' || !invitedStore) return;
+
+  const name = document.getElementById('family-guest-name')?.value.trim();
+
+  if (!name || name.length < 2 || name.length > 35) {
+    alert('Digite um nome ou apelido de 2 a 35 caracteres.');
+    return;
+  }
+
+  familyGuestName = name;
+  alert('Bem-vindo à lojinha, ' + familyGuestName + '!');
+}
 
 
 async function validateFamilyInvite() {
