@@ -602,7 +602,7 @@ function performArchiveProduct(){
 
 
 function render(){
-  if (inviteTokenFromURL) {
+ if (inviteTokenFromURL && !familyGuestEntered) {
     const message = inviteValidationStatus === 'pending'
       ? 'Verificando seu convite...'
       : inviteValidationStatus === 'valid'
@@ -690,7 +690,10 @@ let familyGuestName = '';
   }
 
   familyGuestName = name;
-  alert('Bem-vindo à lojinha, ' + familyGuestName + '!');
+familyGuestEntered = true;
+alert('Bem-vindo à lojinha, ' + familyGuestName + '!');
+page = 'preview';
+render();
 }
 
 
