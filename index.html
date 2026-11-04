@@ -219,7 +219,7 @@ async function copyFamilyInvite() {
   }
 
   const link = new URL('https://denisacoutinho-lang.github.io/evobrinque/');
-  link.searchParams.set('convite', familyInviteToken);
+ link.searchParams.set('invite', familyInviteToken);
 
   try {
     await navigator.clipboard.writeText(link.toString());
