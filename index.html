@@ -639,7 +639,7 @@ function render(){
 
     return;
   }
-  if (inviteTokenFromURL && !['preview', 'cart'].includes(page)) {
+  if (inviteTokenFromURL && !['preview', 'cart', 'online-checkout'].includes(page)) {
     page = 'preview';
   }
   syncCart();
