@@ -692,8 +692,7 @@ function productRows(list){return list.length?list.map(p=>`<div class="item"><di
 function filterProducts(q){document.getElementById('product-list').innerHTML=productRows(products.filter(p=>p.name.toLowerCase().includes(q.toLowerCase())))}
  
 const inviteTokenFromURL =
-  new URLSearchParams(window.location.search).get('convite');
-
+new URLSearchParams(window.location.search).get('invite');
 let invitedStore = null;
 let inviteValidationStatus = inviteTokenFromURL
   ? 'pending'
