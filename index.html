@@ -564,7 +564,7 @@ const money=v=>Number(v).toLocaleString('pt-BR',{style:'currency',currency:'BRL'
 const root=document.getElementById('view');
 const header=name=>`<div class="top"><button class="back" onclick="go('${inviteTokenFromURL ? 'preview' : 'home'}')" aria-label="Voltar">←</button><h1>${name}</h1></div>`;
 function go(p){
-  if (inviteTokenFromURL && (!familyGuestEntered || !['preview','cart'].includes(p))) return;
+  if (inviteTokenFromURL && (!familyGuestEntered || !['preview','cart','online-checkout'].includes(p))) return;
   page=p;
   render();
   window.scrollTo(0,0);
