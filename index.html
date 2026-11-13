@@ -671,7 +671,7 @@ if(page==='online-checkout'){
     '<div class="field"><label for="online-buyer-name">Seu apelido</label>'+
     '<input id="online-buyer-name" maxlength="35" placeholder="Ex.: Papai, Vovó, Tia Ana"></div>'+
     '<div class="cart-total"><span>Total de brincadeira</span><span>'+money(total)+'</span></div>'+
-    '<p class="note">Estamos preparando a confirmação dos pedidos online. Nenhum pedido será enviado nesta etapa.</p>'+
+    '<p class="note" id="online-checkout-message" role="status" aria-live="polite">Estamos preparando a confirmação dos pedidos online. Nenhum pedido será enviado nesta etapa.</p>'+
     '<button class="button secondary" onclick="go(\'cart\')">← Voltar ao carrinho</button>'+
     '</section>';
 }
