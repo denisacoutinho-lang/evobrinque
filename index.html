@@ -457,6 +457,31 @@ function cartView(){
  `<div class="cart-total"><span>Total de brincadeira</span><span>${money(cartTotal())}</span></div>${cartNotice?`<div class="inline-warn">${escapeHTML(cartNotice)}</div>`:''}<button class="button" onclick="go('checkout')" ${!opened?'disabled':''}>${opened?'Continuar para o pedido →':'Loja fechada — pedidos indisponíveis'}</button>`:'<p class="muted">O carrinho está vazio.</p>'}
  <button class="button secondary" onclick="go('preview')">← Voltar à vitrine</button></section>`
 }
+ // V1.9 — validação inicial do pedido online.
+// Nenhum pedido é enviado ao Supabase nesta etapa.
+function validateOnlineCheckout() {
+  const buyer = document.getElementById('online-buyer-name')?.value.trim();
+  const message = document.getElementById('online-checkout-message');
+
+  if (!message) return;
+
+  if (!buyer || buyer.length < 2 || buyer.length > 35) {
+    message.textContent = '⚠️ Digite um apelido de 2 a 35 caracteres.';
+    return;
+  }
+
+  const selected = remoteProducts.filter(
+    p => Number(onlineCart[String(p.id)] || 0) > 0
+  );
+
+  if (!selected.length) {
+    message.textContent = '⚠️ Seu carrinho está vazio.';
+    return;
+  }
+
+  message.textContent =
+    '✅ Apelido e carrinho verificados! O envio de pedidos continua desativado.';
+}
 function onlineCartView() {
   const selected = remoteProducts.filter(
     p => Number(onlineCart[String(p.id)] || 0) > 0
