@@ -526,6 +526,10 @@ function onlineCartView() {
   return header('Meu carrinho') +
     '<section class="card">' +
     '<h2>🛒 ' + onlineCartUnits() + ' item(ns)</h2>' +
+   (onlineCartNotice
+  ? '<div class="inline-warn" role="status" aria-live="polite">⚠️ ' +
+    escapeHTML(onlineCartNotice) + '</div>'
+  : '') +
     (selected.length
       ? selected.map(p => {
           const qty = Number(onlineCart[String(p.id)] || 0);
