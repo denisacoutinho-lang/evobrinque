@@ -511,28 +511,7 @@ function validateOnlineCheckout() {
     '✅ Apelido, produtos e quantidades verificados! O envio de pedidos continua desativado.';
 }
 
-  const buyer = document.getElementById('online-buyer-name')?.value.trim();
-  const message = document.getElementById('online-checkout-message');
-
-  if (!message) return;
-
-  if (!buyer || buyer.length < 2 || buyer.length > 35) {
-    message.textContent = '⚠️ Digite um apelido de 2 a 35 caracteres.';
-    return;
-  }
-
-  const selected = remoteProducts.filter(
-    p => Number(onlineCart[String(p.id)] || 0) > 0
-  );
-
-  if (!selected.length) {
-    message.textContent = '⚠️ Seu carrinho está vazio.';
-    return;
-  }
-
-  message.textContent =
-    '✅ Apelido e carrinho verificados! O envio de pedidos continua desativado.';
-}
+ 
 function onlineCartView() {
   const selected = remoteProducts.filter(
     p => Number(onlineCart[String(p.id)] || 0) > 0
