@@ -459,7 +459,58 @@ function cartView(){
 }
  // V1.9 — validação inicial do pedido online.
 // Nenhum pedido é enviado ao Supabase nesta etapa.
+
 function validateOnlineCheckout() {
+  const buyer = document.getElementById('online-buyer-name')?.value.trim();
+  const message = document.getElementById('online-checkout-message');
+
+  if (!message) return;
+
+  if (!buyer || buyer.length < 2 || buyer.length > 35) {
+    message.textContent = '⚠️ Digite um apelido de 2 a 35 caracteres.';
+    return;
+  }
+
+  if (remoteStatus !== 'ready') {
+    message.textContent = '⚠️ Aguarde a atualização dos produtos online.';
+    return;
+  }
+
+  const entries = Object.entries(onlineCart);
+
+  if (!entries.length) {
+    message.textContent = '⚠️ Seu carrinho está vazio.';
+    return;
+  }
+
+  if (entries.length > 30) {
+    message.textContent = '⚠️ O carrinho permite até 30 produtos diferentes.';
+    return;
+  }
+
+  for (const [id, quantity] of entries) {
+    const product = remoteProducts.find(p => String(p.id) === id);
+
+    if (!product || !product.is_active) {
+      message.textContent = '⚠️ Existe um produto indisponível no carrinho.';
+      return;
+    }
+
+    if (!Number.isInteger(quantity) || quantity < 1 || quantity > 100) {
+      message.textContent = '⚠️ Existe uma quantidade inválida no carrinho.';
+      return;
+    }
+
+    if (quantity > Number(product.stock)) {
+      message.textContent = '⚠️ Estoque insuficiente para ' + product.name + '.';
+      return;
+    }
+  }
+
+  message.textContent =
+    '✅ Apelido, produtos e quantidades verificados! O envio de pedidos continua desativado.';
+}
+
   const buyer = document.getElementById('online-buyer-name')?.value.trim();
   const message = document.getElementById('online-checkout-message');
 
