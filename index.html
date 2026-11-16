@@ -659,6 +659,12 @@ function validateOnlineCheckout() {
   const message = document.getElementById('online-checkout-message');
 
   if (!message) return;
+  
+  if (onlineStoreStatus !== 'ready' || onlineStoreOpen !== true) {
+    message.textContent = '⚠️ A lojinha online está fechada ou indisponível. Não é possível continuar com o pedido.';
+    return;
+  }
+
 
   if (!buyer || buyer.length < 2 || buyer.length > 35) {
     message.textContent = '⚠️ Digite um apelido de 2 a 35 caracteres.';
