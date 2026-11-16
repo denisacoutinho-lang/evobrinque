@@ -163,7 +163,10 @@ async function adminLogin(event){
 function adminLogout(){adminAccessToken=null;adminEmail='';render();}
  
 const ACTIVE_STORE_ID = 1;
-
+// Estado da lojinha online, consultado no Supabase.
+let onlineStoreOpen = null;
+let onlineStoreStatus = 'loading';
+let onlineStoreBusy = false;
 async function setOnlineStoreOpen(shouldOpen) {
   if (!adminAccessToken) {
     alert('Entre como administrador para alterar a lojinha online.');
