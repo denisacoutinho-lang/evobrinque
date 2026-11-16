@@ -156,8 +156,15 @@ async function adminLogin(event){
   if(!who.ok)throw new Error('Não foi possível confirmar a conta.');
   const user=await who.json();
   if(user.id!==ADMIN_USER_ID)throw new Error('Esta conta não possui permissão de administração.');
-  adminAccessToken=result.access_token;adminEmail=user.email||email;
-  render();loadRemoteProducts();
+ 
+adminAccessToken=result.access_token;
+adminEmail=user.email||email;
+
+await loadOnlineStoreStatus();
+
+render();
+loadRemoteProducts();
+
  }catch(e){error.textContent=e instanceof TypeError?'Sem conexão com o Supabase. Tente novamente.':e.message;button.disabled=false;button.textContent='Entrar como administrador';}
 }
 function adminLogout(){adminAccessToken=null;adminEmail='';render();}
