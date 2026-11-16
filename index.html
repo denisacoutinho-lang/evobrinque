@@ -133,7 +133,21 @@ function updateRemotePanel(){const panel=document.getElementById('remote-product
 const ADMIN_USER_ID='049b07ca-d164-4279-a74f-871cf2f6436f';
 let adminAccessToken=null,adminEmail='';
 function adminPanelHTML(){
- if(adminAccessToken)return `<section class="card admin-login"><h2>🔐 Acesso administrativo</h2><p class="admin-ok">✅ Conectado${adminEmail?' como '+escapeHTML(adminEmail):''}.</p><p class="muted">Login ativo. Agora você pode gerenciar os produtos online abaixo. Os produtos antigos deste aparelho continuam separados.</p><button class="button secondary" onclick="generateFamilyInvite()">🔗 Gerar convite para familiares</button>
+ 
+if(adminAccessToken)return `<section class="card admin-login">
+<h2>🔐 Acesso administrativo</h2>
+<p class="admin-ok">✅ Conectado${adminEmail?' como '+escapeHTML(adminEmail):''}.</p>
+<p class="muted">Login ativo. Você pode gerenciar os produtos online abaixo.</p>
+<div class="note" role="status">
+  <b>🏪 Estado da lojinha online:</b>
+  ${onlineStoreStatus === 'ready'
+    ? (onlineStoreOpen ? '🟢 Aberta' : '🔴 Fechada')
+    : onlineStoreStatus === 'loading'
+      ? '🟡 Consultando...'
+      : '🟡 Não foi possível confirmar o estado'}
+</div>
+<button class="button secondary" onclick="generateFamilyInvite()">🔗 Gerar convite para familiares</button>
+
 ${familyInviteToken ? '<button class="button secondary" onclick="copyFamilyInvite()">📋 Copiar convite</button>' : ''}
 <button class="button secondary" onclick="adminLogout()">Sair da conta</button>
 
