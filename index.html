@@ -977,9 +977,12 @@ let familyGuestName = '';
   familyGuestName = name;
 familyGuestEntered = true;
 alert('Bem-vindo à lojinha, ' + familyGuestName + '!');
+
 page = 'preview';
 render();
+loadOnlineStoreStatus();
 loadRemoteProducts();
+
 }
 
 
