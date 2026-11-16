@@ -163,6 +163,46 @@ async function adminLogin(event){
 function adminLogout(){adminAccessToken=null;adminEmail='';render();}
  
 const ACTIVE_STORE_ID = 1;
+
+async function setOnlineStoreOpen(shouldOpen) {
+  if (!adminAccessToken) {
+    alert('Entre como administrador para alterar a lojinha online.');
+    return false;
+  }
+
+  try {
+    const response = await fetch(
+      SUPABASE_URL + '/rest/v1/rpc/set_store_open',
+      {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_PUBLISHABLE_KEY,
+          'Authorization': 'Bearer ' + adminAccessToken,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          p_store_id: ACTIVE_STORE_ID,
+          p_is_open: shouldOpen
+        }),
+        cache: 'no-store'
+      }
+    );
+
+    if (!response.ok) {
+      if (response.status === 401 || response.status === 403) {
+        throw new Error('Acesso negado. Entre novamente como administrador.');
+      }
+      throw new Error('Não foi possível alterar o estado da lojinha.');
+    }
+
+    return true;
+
+  } catch (error) {
+    alert(error.message || 'Erro de conexão com o Supabase.');
+    return false;
+  }
+}
+ 
 let inviteBusy = false;
 let inviteMessage = '';
 let familyInviteToken = '';
