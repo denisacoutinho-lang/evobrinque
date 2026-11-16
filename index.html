@@ -302,15 +302,46 @@ async function setOnlineStoreOpen(shouldOpen) {
   }
 }
 
-      return false;
+async function confirmOnlineStoreChange(shouldOpen) {
+  if (!adminAccessToken || onlineStoreBusy) return;
+
+  if (onlineStoreStatus !== 'ready') {
+    alert('Não foi possível confirmar o estado atual da lojinha. Atualize a consulta antes de alterar.');
+    return;
   }
+
+  if (onlineStoreOpen === shouldOpen) return;
+
+  askConfirm(
+    '🏪',
+    shouldOpen ? 'Abrir a lojinha online?' : 'Fechar a lojinha online?',
+    shouldOpen
+      ? 'Os familiares poderão acessar a lojinha aberta.'
+      : 'Os familiares poderão visualizar os produtos, mas não deverão realizar novos pedidos.',
+    shouldOpen ? 'Sim, abrir lojinha' : 'Sim, fechar lojinha',
+    'Cancelar',
+    async () => {
+      if (onlineStoreBusy) return;
+
+      onlineStoreBusy = true;
+
+      try {
+        const success = await setOnlineStoreOpen(shouldOpen);
+        await loadOnlineStoreStatus();
+
+        if (success && onlineStoreStatus === 'ready') {
+          alert(onlineStoreOpen === shouldOpen
+            ? 'Estado da lojinha atualizado!'
+            : 'Não foi possível confirmar a alteração. Confira o estado exibido.');
+        }
+      } finally {
+        onlineStoreBusy = false;
+        render();
+      }
+    }
+  );
 }
 
-// COLE AQUI A FUNÇÃO confirmOnlineStoreChange(shouldOpen)
-
-let inviteBusy = false;
-let inviteMessage = '';
-let familyInviteToken = '';
 let inviteBusy = false;
 let inviteMessage = '';
 let familyInviteToken = '';
