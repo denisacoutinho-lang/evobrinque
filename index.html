@@ -167,6 +167,69 @@ const ACTIVE_STORE_ID = 1;
 let onlineStoreOpen = null;
 let onlineStoreStatus = 'loading';
 let onlineStoreBusy = false;
+ 
+async function loadOnlineStoreStatus() {
+  onlineStoreStatus = 'loading';
+
+  try {
+    let response;
+
+    if (inviteTokenFromURL) {
+      response = await fetch(
+        SUPABASE_URL + '/rest/v1/rpc/get_invited_store_status',
+        {
+          method: 'POST',
+          headers: {
+            'apikey': SUPABASE_PUBLISHABLE_KEY,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            p_token: inviteTokenFromURL
+          }),
+          cache: 'no-store'
+        }
+      );
+    } else {
+      if (!adminAccessToken) {
+        onlineStoreOpen = null;
+        onlineStoreStatus = 'unauthorized';
+        return;
+      }
+
+      response = await fetch(
+        SUPABASE_URL +
+          '/rest/v1/stores?select=is_open&id=eq.' +
+          ACTIVE_STORE_ID,
+        {
+          headers: {
+            'apikey': SUPABASE_PUBLISHABLE_KEY,
+            'Authorization': 'Bearer ' + adminAccessToken
+          },
+          cache: 'no-store'
+        }
+      );
+    }
+
+    if (!response.ok) {
+      throw new Error('Falha ao consultar a lojinha.');
+    }
+
+    const rows = await response.json();
+
+    if (!Array.isArray(rows) || rows.length !== 1 ||
+        typeof rows[0].is_open !== 'boolean') {
+      throw new Error('Estado da lojinha indisponível.');
+    }
+
+    onlineStoreOpen = rows[0].is_open;
+    onlineStoreStatus = 'ready';
+
+  } catch (error) {
+    onlineStoreOpen = null;
+    onlineStoreStatus = 'error';
+  }
+}
+
 async function setOnlineStoreOpen(shouldOpen) {
   if (!adminAccessToken) {
     alert('Entre como administrador para alterar a lojinha online.');
