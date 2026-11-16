@@ -146,6 +146,14 @@ if(adminAccessToken)return `<section class="card admin-login">
       ? '🟡 Consultando...'
       : '🟡 Não foi possível confirmar o estado'}
 </div>
+<div class="note" role="status">
+  <b>🏪 Estado da lojinha online:</b>
+  ${onlineStoreStatus === 'ready'
+    ? (onlineStoreOpen ? '🟢 Aberta' : '🔴 Fechada')
+    : onlineStoreStatus === 'loading'
+      ? '🟡 Consultando...'
+      : '🟡 Estado não confirmado'}
+</div>
 <button class="button secondary" onclick="generateFamilyInvite()">🔗 Gerar convite para familiares</button>
 
 ${familyInviteToken ? '<button class="button secondary" onclick="copyFamilyInvite()">📋 Copiar convite</button>' : ''}
