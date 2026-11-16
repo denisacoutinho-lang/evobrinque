@@ -631,8 +631,23 @@ function go(p){
 }
 function changeTab(t){tab=t;render()}
 function toggle(){
- if(!opened){opened=true;render();return}
- askConfirm('🏪','Fechar a lojinha?','Os clientes poderão ver os produtos, mas não poderão fazer novos pedidos até você abrir a lojinha novamente.','Sim, fechar lojinha','Não, manter aberta',()=>{opened=false;render()});
+  if(!opened){
+    opened=true;
+    render();
+    return;
+  }
+
+  askConfirm(
+    '🏪',
+    'Fechar a lojinha?',
+    'Os clientes poderão ver os produtos, mas não poderão fazer novos pedidos até você abrir a lojinha novamente.',
+    'Sim, fechar lojinha',
+    'Não, manter aberta',
+    ()=>{
+      opened=false;
+      render();
+    }
+  );
 }
 function changeQty(delta){const el=document.getElementById('stock');if(!el)return;let n=Number(el.value)||0;el.value=Math.max(0,Math.min(999999,n+delta))}
 function showAdd(){editId=null;qty=0;pendingPhoto=null;go('form')}
