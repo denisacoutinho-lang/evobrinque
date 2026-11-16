@@ -539,8 +539,13 @@ function onlineCartUnits() {
   }, 0);
 }
 
-function addOnlineCart(productId) {
-  const product = remoteProducts.find(
+  function addOnlineCart(productId) {
+  if (onlineStoreStatus !== 'ready' || onlineStoreOpen !== true) {
+    onlineCartNotice = 'A lojinha online está fechada ou indisponível.';
+    return false;
+  }
+
+   const product = remoteProducts.find(
     p => Number(p.id) === Number(productId)
   );
 
