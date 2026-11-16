@@ -251,11 +251,17 @@ response = await fetch(
     onlineStoreOpen = rows[0].is_open;
     onlineStoreStatus = 'ready';
 
+
   } catch (error) {
     onlineStoreOpen = null;
     onlineStoreStatus = 'error';
+  } finally {
+    if (page === 'products') {
+      render();
+    }
   }
 }
+
 
 async function setOnlineStoreOpen(shouldOpen) {
   if (!adminAccessToken) {
