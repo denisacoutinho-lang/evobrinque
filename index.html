@@ -203,18 +203,23 @@ async function loadOnlineStoreStatus() {
         return;
       }
 
-      response = await fetch(
-        SUPABASE_URL +
-          '/rest/v1/stores?select=is_open&id=eq.' +
-          ACTIVE_STORE_ID,
-        {
-          headers: {
-            'apikey': SUPABASE_PUBLISHABLE_KEY,
-            'Authorization': 'Bearer ' + adminAccessToken
-          },
-          cache: 'no-store'
-        }
-      );
+     
+response = await fetch(
+  SUPABASE_URL + '/rest/v1/rpc/get_owned_store_status',
+  {
+    method: 'POST',
+    headers: {
+      'apikey': SUPABASE_PUBLISHABLE_KEY,
+      'Authorization': 'Bearer ' + adminAccessToken,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      p_store_id: ACTIVE_STORE_ID
+    }),
+    cache: 'no-store'
+  }
+);
+
     }
 
     if (!response.ok) {
