@@ -266,9 +266,11 @@ response = await fetch(
     onlineStoreOpen = null;
     onlineStoreStatus = 'error';
   } finally {
-    if (page === 'products') {
-      render();
-    }
+    
+if (page === 'products' || (inviteTokenFromURL && page === 'preview')) {
+  render();
+}
+
   }
 }
 
