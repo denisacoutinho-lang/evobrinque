@@ -1006,7 +1006,11 @@ ${inviteTokenFromURL
   ? (onlineStoreStatus === 'ready'
       ? (onlineStoreOpen ? '🟢 Lojinha online aberta' : '🔴 Lojinha online fechada')
       : '🟡 Consultando estado da lojinha online...')
-  : (opened ? '🟢 Aberta para compras de brincadeira' : '🔴 Fechada no momento')}
+
+: (onlineStoreStatus === 'ready'
+    ? (onlineStoreOpen ? '🟢 Lojinha online aberta' : '🔴 Lojinha online fechada')
+    : '🟡 Estado da lojinha online indisponível')}
+
 </p></section><div class="cart-top" style="margin:14px 0"><h2>Produtos da lojinha</h2><button class="button secondary" onclick="go('cart')">🛒 Carrinho (${onlineCartUnits()})</button></div><p id="feedback" class="note" hidden></p><div id="remote-products" class="shop-grid">${remotePanelHTML()}</div>${inviteTokenFromURL ? '' : '<p class="remote-caption" style="margin-top:18px">📱 Produtos deste aparelho · Compras de teste locais</p>'}${inviteTokenFromURL ? '' : `<div class="shop-grid">${shopCards()}</div>`}${!inviteTokenFromURL && cartUnits()?`<button class="button cart-floating" onclick="go('cart')">🛒 Ver carrinho · ${cartUnits()} ${cartUnits()===1?'item':'itens'} · ${money(cartTotal())}</button>`:''}<p class="tiny">Os produtos online são apenas para consulta. Pedidos e estoque das compras locais permanecem neste navegador.</p>`}
 if(page==='cart')html=inviteTokenFromURL?onlineCartView():(onlineCartUnits()>0?onlineCartView():cartView());
 root.classList.toggle('shopping-theme',['preview','cart','checkout','order-success'].includes(page));
