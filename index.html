@@ -732,9 +732,12 @@ if (!product || product.is_active === false) {
     }
   }
 
+  
   message.textContent =
     '✅ Apelido, produtos e quantidades verificados! O envio de pedidos continua desativado.';
+  if (verifyButton?.isConnected) verifyButton.disabled = false;
 }
+
 
  
 function onlineCartView() {
