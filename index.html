@@ -680,6 +680,8 @@ try {
 }
   
 
+try {
+
   const buyer = document.getElementById('online-buyer-name')?.value.trim();
   const message = document.getElementById('online-checkout-message');
 
@@ -733,10 +735,13 @@ if (!product || product.is_active === false) {
   }
 
   
-  message.textContent =
-    '✅ Apelido, produtos e quantidades verificados! O envio de pedidos continua desativado.';
+  
+message.textContent =
+  '✅ Apelido, produtos e quantidades verificados! O envio de pedidos continua desativado.';
+} finally {
   if (verifyButton?.isConnected) verifyButton.disabled = false;
 }
+
 
 
  
