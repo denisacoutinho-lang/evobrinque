@@ -747,8 +747,11 @@ function onlineCartView() {
             '<button class="button secondary" onclick="removeOnlineCart(' +
               Number(p.id) + ');render()">−</button>' +
             '<strong>' + qty + '</strong>' +
-            '<button class="button secondary" onclick="addOnlineCart(' +
-              Number(p.id) + ');render()">+</button>' +
+            
+'<button class="button secondary" ' +
+  (onlineStoreStatus !== 'ready' || onlineStoreOpen !== true || qty >= Number(p.stock) ? 'disabled ' : '') +
+  'onclick="addOnlineCart(' + Number(p.id) + ');render()">+</button>' +
+
             '</div></div>';
         }).join('') +
        
