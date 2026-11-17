@@ -128,7 +128,9 @@ function remotePanelHTML(){
  if(!remoteProducts.length)return '<div class="card remote-panel"><p class="muted">Ainda não há produtos ativos no banco online.</p></div>';
  return '<p class="remote-caption">🛒 Produtos online · '+onlineCartUnits()+' item(ns) no carrinho</p>'+remoteProducts.map(p=>`<article class="shop-card remote-shop-card"><div class="shop-emoji">📦</div><b>${escapeHTML(p.name)}</b><strong>${money(p.price)}</strong><small class="muted">${p.stock>0?'Disponível: '+p.stock+' un.':'Esgotado'}</small>
 <button class="button" ${onlineStoreStatus !== 'ready' || onlineStoreOpen !== true || p.stock <= 0 ? 'disabled' : ''} onclick="if(addOnlineCart(${p.id})){updateRemotePanel();render()}">
-🛒 Adicionar ao carrinho</button></article>`).join('');
+
+${p.stock <= 0 ? 'Esgotado' : onlineStoreStatus !== 'ready' || onlineStoreOpen !== true ? '🔒 Lojinha fechada' : '🛒 Adicionar ao carrinho'}
+</button></article>`).join('');
 }
 function updateRemotePanel(){const panel=document.getElementById('remote-products');if(panel)panel.innerHTML=remotePanelHTML();if(page==='products'&&document.getElementById('remote-admin-message'))render();}
 // V1.6: autenticação administrativa; senha nunca é armazenada.
