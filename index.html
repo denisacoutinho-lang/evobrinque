@@ -665,7 +665,19 @@ function cartView(){
 
 
 async function validateOnlineCheckout() {
+  
+const verifyButton = document.querySelector(
+  'button[onclick="validateOnlineCheckout()"]'
+);
+if (verifyButton?.disabled) return;
+if (verifyButton) verifyButton.disabled = true;
+
+try {
   await loadOnlineStoreStatus();
+} finally {
+  if (verifyButton?.isConnected) verifyButton.disabled = false;
+}
+  
 
   const buyer = document.getElementById('online-buyer-name')?.value.trim();
   const message = document.getElementById('online-checkout-message');
