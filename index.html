@@ -505,7 +505,10 @@ function loadPhoto(input){const file=input.files&&input.files[0];if(!file)return
 }
 
  // V1.8 — carrinho online separado do carrinho local
- const ONLINE_CART_KEY='evobrinque_carrinho_online_v18';
+
+const ONLINE_CART_KEY = 'evobrinque_carrinho_online_v18_' +
+  (new URLSearchParams(window.location.search).get('invite') || 'local');
+
  let onlineCart={};
  let onlineCartNotice='';
 
