@@ -663,7 +663,10 @@ function cartView(){
  // V1.9 — validação inicial do pedido online.
 // Nenhum pedido é enviado ao Supabase nesta etapa.
 
-function validateOnlineCheckout() {
+
+async function validateOnlineCheckout() {
+  await loadOnlineStoreStatus();
+
   const buyer = document.getElementById('online-buyer-name')?.value.trim();
   const message = document.getElementById('online-checkout-message');
 
