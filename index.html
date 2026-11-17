@@ -697,7 +697,7 @@ function validateOnlineCheckout() {
   for (const [id, quantity] of entries) {
     const product = remoteProducts.find(p => String(p.id) === id);
 
-    if (!product || !product.is_active) {
+if (!product || product.is_active === false) {
       message.textContent = '⚠️ Existe um produto indisponível no carrinho.';
       return;
     }
