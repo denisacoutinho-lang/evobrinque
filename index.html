@@ -872,6 +872,7 @@ function go(p){
   render();
   window.scrollTo(0,0);
   if(p==='preview'||p==='products')loadRemoteProducts();
+  if(p==='preview'||p==='products')loadOnlineStoreStatus();
 }
 function changeTab(t){tab=t;render()}
 function toggle(){
