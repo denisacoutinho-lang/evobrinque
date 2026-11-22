@@ -196,7 +196,16 @@ loadRemoteProducts();
 
  }catch(e){error.textContent=e instanceof TypeError?'Sem conexão com o Supabase. Tente novamente.':e.message;button.disabled=false;button.textContent='Entrar como administrador';}
 }
-function adminLogout(){adminAccessToken=null;adminEmail='';render();}
+function adminLogout(){
+  adminAccessToken = null;
+  adminEmail = '';
+  onlineStoreOpen = null;
+  onlineStoreStatus = 'unauthorized';
+  familyInviteToken = '';
+  remoteEditId = null;
+  remoteMessage = '';
+  render();
+}
  
 const ACTIVE_STORE_ID = 1;
 // Estado da lojinha online, consultado no Supabase.
