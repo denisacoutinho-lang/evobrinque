@@ -271,7 +271,7 @@ response = await fetch(
     onlineStoreStatus = 'error';
   } finally {
     
-if (page === 'products' || (inviteTokenFromURL && page === 'preview')) {
+if (page === 'home' || page === 'products' || page === 'preview') {
   render();
 }
 
