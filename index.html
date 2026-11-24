@@ -94,6 +94,26 @@
 // V1.5.3: chave publicável; nunca colocar chave secreta neste arquivo.
 const SUPABASE_URL='https://qulltcckmrkawsyxbfux.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY='sb_publishable_ms3LdQ7ogy3do2kuoFnn_g_408wYs3t';
+    let supabaseClient = null;
+
+function initializeSupabaseClient() {
+  if (supabaseClient) return supabaseClient;
+
+  supabaseClient = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_PUBLISHABLE_KEY,
+    {
+      auth: {
+        storage: window.sessionStorage,
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: false
+      }
+    }
+  );
+
+  return supabaseClient;
+}
 let remoteProducts=[],remoteStatus='loading',remoteRequest=0;
 async function loadRemoteProducts(){
  const storeId = inviteTokenFromURL && invitedStore ? invitedStore.store_id : ACTIVE_STORE_ID;
