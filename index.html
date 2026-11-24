@@ -199,17 +199,36 @@ async function adminLogin(event){
  if(!email||!password||!error||!button)return;
  button.disabled=true;button.textContent='Verificando acesso...';error.textContent='';
  try{
-  const response=await fetch(SUPABASE_URL+'/auth/v1/token?grant_type=password',{method:'POST',headers:{'apikey':SUPABASE_PUBLISHABLE_KEY,'Content-Type':'application/json'},body:JSON.stringify({email,password}),cache:'no-store'});
-  const result=await response.json();
-  if(!response.ok||!result.access_token)throw new Error('Não foi possível entrar. Confira o e-mail e a senha.');
-  const who=await fetch(SUPABASE_URL+'/auth/v1/user',{headers:{'apikey':SUPABASE_PUBLISHABLE_KEY,'Authorization':'Bearer '+result.access_token},cache:'no-store'});
-  if(!who.ok)throw new Error('Não foi possível confirmar a conta.');
-  const user=await who.json();
-  if(user.id!==ADMIN_USER_ID)throw new Error('Esta conta não possui permissão de administração.');
- 
-adminAccessToken=result.access_token;
-adminEmail=user.email||email;
 
+const client = initializeSupabaseClient();
+
+const { data, error: loginError } =
+  await client.auth.signInWithPassword({
+    email,
+    password
+  });
+
+if (loginError || !data.session?.access_token) {
+  throw new Error('Não foi possível entrar. Confira o e-mail e a senha.');
+}
+
+const { data: userData, error: userError } =
+  await client.auth.getUser();
+
+if (userError || !userData.user) {
+  await client.auth.signOut({ scope: 'local' });
+  throw new Error('Não foi possível confirmar a conta.');
+}
+
+const user = userData.user;
+
+if (user.id !== ADMIN_USER_ID) {
+  await client.auth.signOut({ scope: 'local' });
+  throw new Error('Esta conta não possui permissão de administração.');
+}
+
+adminAccessToken = data.session.access_token;
+adminEmail = user.email || email;
 await loadOnlineStoreStatus();
 
 render();
