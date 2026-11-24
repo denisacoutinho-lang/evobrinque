@@ -236,40 +236,31 @@ loadRemoteProducts();
 
  }catch(e){error.textContent=e instanceof TypeError?'Sem conexão com o Supabase. Tente novamente.':e.message;button.disabled=false;button.textContent='Entrar como administrador';}
 }
+
 async function adminLogout(){
-  const token = adminAccessToken;
-
-  adminAccessToken = null;
-  adminEmail = '';
-  onlineStoreOpen = null;
-  onlineStoreStatus = 'unauthorized';
-  familyInviteToken = '';
-  remoteEditId = null;
-  remoteMessage = '';
-  render();
-
-  if (!token) return;
-
   try {
-    const response = await fetch(
-      SUPABASE_URL + '/auth/v1/logout?scope=local',
-      {
-        method: 'POST',
-        headers: {
-          'apikey': SUPABASE_PUBLISHABLE_KEY,
-          'Authorization': 'Bearer ' + token
-        },
-        cache: 'no-store'
-      }
-    );
+    const client = initializeSupabaseClient();
 
-    if (!response.ok) {
-      throw new Error('Falha ao encerrar a sessao.');
-    }
+    const { error } = await client.auth.signOut({
+      scope: 'local'
+    });
+
+    if (error) throw error;
+
+    adminAccessToken = null;
+    adminEmail = '';
+    onlineStoreOpen = null;
+    onlineStoreStatus = 'unauthorized';
+    familyInviteToken = '';
+    remoteEditId = null;
+    remoteMessage = '';
+    render();
+
   } catch (error) {
-    alert('Acesso local encerrado, mas nao foi possivel confirmar o encerramento da sessao no Supabase.');
+    alert('Não foi possível confirmar o encerramento da sessão. Tente novamente.');
   }
 }
+
  
 const ACTIVE_STORE_ID = 1;
 // Estado da lojinha online, consultado no Supabase.
