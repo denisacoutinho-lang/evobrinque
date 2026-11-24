@@ -196,7 +196,9 @@ loadRemoteProducts();
 
  }catch(e){error.textContent=e instanceof TypeError?'Sem conexão com o Supabase. Tente novamente.':e.message;button.disabled=false;button.textContent='Entrar como administrador';}
 }
-function adminLogout(){
+async function adminLogout(){
+  const token = adminAccessToken;
+
   adminAccessToken = null;
   adminEmail = '';
   onlineStoreOpen = null;
@@ -205,6 +207,28 @@ function adminLogout(){
   remoteEditId = null;
   remoteMessage = '';
   render();
+
+  if (!token) return;
+
+  try {
+    const response = await fetch(
+      SUPABASE_URL + '/auth/v1/logout?scope=local',
+      {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_PUBLISHABLE_KEY,
+          'Authorization': 'Bearer ' + token
+        },
+        cache: 'no-store'
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error('Falha ao encerrar a sessao.');
+    }
+  } catch (error) {
+    alert('Acesso local encerrado, mas nao foi possivel confirmar o encerramento da sessao no Supabase.');
+  }
 }
  
 const ACTIVE_STORE_ID = 1;
