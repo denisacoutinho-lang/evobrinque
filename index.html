@@ -261,7 +261,46 @@ async function adminLogout(){
   }
 }
 
- 
+async function restoreAdminSession() {
+  if (inviteTokenFromURL) return;
+
+  try {
+    const client = initializeSupabaseClient();
+
+    const { data, error } = await client.auth.getSession();
+
+    if (error || !data.session) return;
+
+    const { data: userData, error: userError } =
+      await client.auth.getUser();
+
+    if (userError || !userData.user) return;
+
+    if (userData.user.id !== ADMIN_USER_ID) {
+      await client.auth.signOut({ scope: 'local' });
+      return;
+    }
+
+    const { data: currentData, error: sessionError } =
+      await client.auth.getSession();
+
+    if (sessionError || !currentData.session) return;
+
+    adminAccessToken = currentData.session.access_token;
+    adminEmail = userData.user.email || '';
+
+    await loadOnlineStoreStatus();
+    render();
+    loadRemoteProducts();
+
+  } catch (error) {
+    adminAccessToken = null;
+    adminEmail = '';
+    onlineStoreOpen = null;
+    onlineStoreStatus = 'unauthorized';
+    render();
+  }
+} 
 const ACTIVE_STORE_ID = 1;
 // Estado da lojinha online, consultado no Supabase.
 let onlineStoreOpen = null;
