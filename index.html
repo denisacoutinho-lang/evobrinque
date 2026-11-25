@@ -1206,9 +1206,11 @@ render();
 }
 
 render();
- 
+
 if (inviteTokenFromURL) {
   validateFamilyInvite();
+} else {
+  restoreAdminSession();
 }
 
 </script></body></html>
