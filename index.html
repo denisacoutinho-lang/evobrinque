@@ -112,36 +112,150 @@ function initializeSupabaseClient() {
     }
   );
 
+  supabaseClient.auth.onAuthStateChange((event, session) => {
+    if (inviteTokenFromURL) return;
+
+        if (event === 'SIGNED_OUT') {
+      adminSessionGeneration++;
+      adminAccessToken = null;
+      adminEmail = '';
+      onlineStoreOpen = null;
+      onlineStoreStatus = 'unauthorized';
+      familyInviteToken = '';
+      remoteEditId = null;
+      remoteMessage = '';
+
+      remoteRequest++;
+      remoteProducts = [];
+      remoteStatus = 'unauthorized';
+
+      render();
+      return;
+    }
+
+    if (
+      event === 'TOKEN_REFRESHED' &&
+      adminAccessToken &&
+      session?.user?.id === ADMIN_USER_ID &&
+      session?.access_token
+    ) {
+      adminAccessToken = session.access_token;
+    }
+  });
+
   return supabaseClient;
 }
+let adminSessionGeneration = 0;
 let remoteProducts=[],remoteStatus='loading',remoteRequest=0;
-async function loadRemoteProducts(){
- const storeId = inviteTokenFromURL && invitedStore ? invitedStore.store_id : ACTIVE_STORE_ID;
- const request=++remoteRequest;remoteStatus='loading';updateRemotePanel();
- const isGuest = Boolean(inviteTokenFromURL && invitedStore);
- try{
-  const productsUrl = isGuest
-  ? SUPABASE_URL + '/rest/v1/rpc/get_invited_products'
-  : SUPABASE_URL + '/rest/v1/products?select=id,name,price,stock,is_active&is_active=eq.true&store_id=eq.' + encodeURIComponent(storeId) + '&order=id.asc';
-  const response = await fetch(productsUrl, {
-  method: isGuest ? 'POST' : 'GET',
-  headers: {
-    'apikey': SUPABASE_PUBLISHABLE_KEY,
-    'Accept': 'application/json',
-    ...(isGuest ? {'Content-Type': 'application/json'} : {})
-  },
-  ...(isGuest ? {
-    body: JSON.stringify({p_token: inviteTokenFromURL})
-  } : {}),
-  cache: 'no-store'
-});
-  if(!response.ok)throw new Error('HTTP '+response.status);
-  const rows=await response.json();if(!Array.isArray(rows))throw new Error('Resposta inválida');
-  if(request!==remoteRequest)return;
-  remoteProducts=rows.filter(p=>p&&typeof p.name==='string'&&Number.isFinite(Number(p.price))&&Number.isInteger(Number(p.stock))&&Number(p.stock)>=0);
-  remoteStatus='ready';
- }catch(e){if(request!==remoteRequest)return;remoteStatus='error';}
- updateRemotePanel();
+async function loadRemoteProducts() {
+  const request = ++remoteRequest;
+  const isGuest = Boolean(inviteTokenFromURL);
+
+  remoteProducts = [];
+
+  if (isGuest) {
+    if (
+      !invitedStore ||
+      inviteValidationStatus !== 'valid' ||
+      !familyGuestEntered
+    ) {
+      remoteStatus = 'unauthorized';
+      updateRemotePanel();
+      return;
+    }
+  } else if (!adminAccessToken) {
+    remoteStatus = 'unauthorized';
+    updateRemotePanel();
+    return;
+  }
+
+  remoteStatus = 'loading';
+  updateRemotePanel();
+
+  try {
+    let rows;
+
+    if (isGuest) {
+      const response = await fetch(
+        SUPABASE_URL + '/rest/v1/rpc/get_invited_products',
+        {
+          method: 'POST',
+          headers: {
+            'apikey': SUPABASE_PUBLISHABLE_KEY,
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            p_token: inviteTokenFromURL
+          }),
+          cache: 'no-store'
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('HTTP ' + response.status);
+      }
+
+      rows = await response.json();
+
+    } else {
+      const client = initializeSupabaseClient();
+
+      const { data: sessionData, error: sessionError } =
+        await client.auth.getSession();
+
+      if (
+        sessionError ||
+        !sessionData.session ||
+        sessionData.session.user?.id !== ADMIN_USER_ID
+      ) {
+        throw new Error('Sessão administrativa inválida.');
+      }
+
+      const { data, error } = await client
+        .from('products')
+        .select('id,name,price,stock,is_active')
+        .eq('is_active', true)
+        .eq('store_id', ACTIVE_STORE_ID)
+        .order('id', { ascending: true });
+
+      if (error) throw error;
+
+      rows = data;
+    }
+
+    if (request !== remoteRequest) return;
+
+    if (!isGuest && !adminAccessToken) {
+      remoteProducts = [];
+      remoteStatus = 'unauthorized';
+      updateRemotePanel();
+      return;
+    }
+
+    if (!Array.isArray(rows)) {
+      throw new Error('Resposta inválida.');
+    }
+
+    remoteProducts = rows.filter(
+      p =>
+        p &&
+        typeof p.name === 'string' &&
+        Number.isFinite(Number(p.price)) &&
+        Number.isInteger(Number(p.stock)) &&
+        Number(p.stock) >= 0
+    );
+
+    remoteStatus = 'ready';
+
+  } catch (error) {
+    if (request !== remoteRequest) return;
+
+    remoteProducts = [];
+    remoteStatus = 'error';
+  }
+
+  updateRemotePanel();
 }
 function remotePanelHTML(){
  if(remoteStatus==='loading')return '<div class="card remote-panel"><p class="muted">🔄 Buscando produtos da lojinha compartilhada...</p></div>';
@@ -237,7 +351,7 @@ loadRemoteProducts();
  }catch(e){error.textContent=e instanceof TypeError?'Sem conexão com o Supabase. Tente novamente.':e.message;button.disabled=false;button.textContent='Entrar como administrador';}
 }
 
-async function adminLogout(){
+   async function adminLogout(){
   try {
     const client = initializeSupabaseClient();
 
@@ -254,6 +368,11 @@ async function adminLogout(){
     familyInviteToken = '';
     remoteEditId = null;
     remoteMessage = '';
+
+    remoteRequest++;
+    remoteProducts = [];
+    remoteStatus = 'unauthorized';
+
     render();
 
   } catch (error) {
@@ -307,13 +426,29 @@ let onlineStoreOpen = null;
 let onlineStoreStatus = 'loading';
 let onlineStoreBusy = false;
  
+
 async function loadOnlineStoreStatus() {
+  const generation = adminSessionGeneration;
+  const isGuest = Boolean(inviteTokenFromURL);
+
+  const isCurrentSession = () =>
+    isGuest || (
+      generation === adminSessionGeneration &&
+      Boolean(adminAccessToken)
+    );
+
+  if (!isCurrentSession()) {
+    onlineStoreOpen = null;
+    onlineStoreStatus = 'unauthorized';
+    return;
+  }
+
   onlineStoreStatus = 'loading';
 
   try {
     let response;
 
-    if (inviteTokenFromURL) {
+    if (isGuest) {
       response = await fetch(
         SUPABASE_URL + '/rest/v1/rpc/get_invited_store_status',
         {
@@ -329,36 +464,32 @@ async function loadOnlineStoreStatus() {
         }
       );
     } else {
-      if (!adminAccessToken) {
-        onlineStoreOpen = null;
-        onlineStoreStatus = 'unauthorized';
-        return;
-      }
-
-     
-response = await fetch(
-  SUPABASE_URL + '/rest/v1/rpc/get_owned_store_status',
-  {
-    method: 'POST',
-    headers: {
-      'apikey': SUPABASE_PUBLISHABLE_KEY,
-      'Authorization': 'Bearer ' + adminAccessToken,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      p_store_id: ACTIVE_STORE_ID
-    }),
-    cache: 'no-store'
-  }
-);
-
+      response = await fetch(
+        SUPABASE_URL + '/rest/v1/rpc/get_owned_store_status',
+        {
+          method: 'POST',
+          headers: {
+            'apikey': SUPABASE_PUBLISHABLE_KEY,
+            'Authorization': 'Bearer ' + adminAccessToken,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            p_store_id: ACTIVE_STORE_ID
+          }),
+          cache: 'no-store'
+        }
+      );
     }
+
+    if (!isCurrentSession()) return;
 
     if (!response.ok) {
       throw new Error('Falha ao consultar a lojinha.');
     }
 
     const rows = await response.json();
+
+    if (!isCurrentSession()) return;
 
     if (!Array.isArray(rows) || rows.length !== 1 ||
         typeof rows[0].is_open !== 'boolean') {
@@ -368,19 +499,20 @@ response = await fetch(
     onlineStoreOpen = rows[0].is_open;
     onlineStoreStatus = 'ready';
 
-
   } catch (error) {
-    onlineStoreOpen = null;
-    onlineStoreStatus = 'error';
+    if (isCurrentSession()) {
+      onlineStoreOpen = null;
+      onlineStoreStatus = 'error';
+    }
   } finally {
-    
-if (page === 'home' || page === 'products' || page === 'preview') {
-  render();
-}
-
+    if (
+      isCurrentSession() &&
+      (page === 'home' || page === 'products' || page === 'preview')
+    ) {
+      render();
+    }
   }
 }
-
 
 async function setOnlineStoreOpen(shouldOpen) {
   if (!adminAccessToken) {
