@@ -115,23 +115,33 @@ function initializeSupabaseClient() {
   supabaseClient.auth.onAuthStateChange((event, session) => {
     if (inviteTokenFromURL) return;
 
-        if (event === 'SIGNED_OUT') {
+        
+    if (event === 'SIGNED_OUT') {
       adminSessionGeneration++;
       adminAccessToken = null;
       adminEmail = '';
+
       onlineStoreOpen = null;
       onlineStoreStatus = 'unauthorized';
+      onlineStoreBusy = false;
+
       familyInviteToken = '';
+      inviteBusy = false;
+      inviteMessage = '';
+
       remoteEditId = null;
       remoteMessage = '';
+      remoteBusy = false;
 
       remoteRequest++;
       remoteProducts = [];
       remoteStatus = 'unauthorized';
 
+      closeConfirm();
       render();
       return;
     }
+
 
     if (
       event === 'TOKEN_REFRESHED' &&
@@ -257,7 +267,11 @@ async function loadRemoteProducts() {
 
   updateRemotePanel();
 }
+
 function remotePanelHTML(){
+  if (remoteStatus === 'unauthorized') {
+    return '<div class="card remote-panel"><p class="muted">🔒 Entre como administrador ou utilize um convite familiar válido para visualizar os produtos online.</p></div>';
+  }
  if(remoteStatus==='loading')return '<div class="card remote-panel"><p class="muted">🔄 Buscando produtos da lojinha compartilhada...</p></div>';
  if(remoteStatus==='error')return '<div class="card remote-panel"><p class="muted">Não foi possível consultar os produtos online. Confira a conexão com a internet.</p><button class="button secondary" onclick="loadRemoteProducts()">Tentar novamente</button></div>';
  if(!remoteProducts.length)return '<div class="card remote-panel"><p class="muted">Ainda não há produtos ativos no banco online.</p></div>';
@@ -304,54 +318,118 @@ ${familyInviteToken ? '<button class="button secondary" onclick="copyFamilyInvit
 </section>`;
  return `<section class="card admin-login"><h2>🔐 Acesso administrativo</h2><p class="muted">Entre com a conta administrativa já criada no Supabase. Os produtos locais continuam funcionando normalmente.</p><form onsubmit="adminLogin(event)"><div class="field"><label for="admin-email">E-mail</label><input id="admin-email" type="email" autocomplete="username" required maxlength="254" placeholder="E-mail da conta administrativa"></div><div class="field"><label for="admin-password">Senha</label><input id="admin-password" type="password" autocomplete="current-password" required placeholder="Senha da conta administrativa"></div><p class="admin-error" id="admin-error" role="alert"></p><button class="button" id="admin-submit" type="submit">Entrar como administrador</button></form><p class="tiny">A senha não é salva neste aparelho.</p></section>`;
 }
-async function adminLogin(event){
- event.preventDefault();
- const email=document.getElementById('admin-email')?.value.trim();
- const password=document.getElementById('admin-password')?.value;
- const error=document.getElementById('admin-error');
- const button=document.getElementById('admin-submit');
- if(!email||!password||!error||!button)return;
- button.disabled=true;button.textContent='Verificando acesso...';error.textContent='';
- try{
 
-const client = initializeSupabaseClient();
+async function adminLogin(event) {
+  event.preventDefault();
 
-const { data, error: loginError } =
-  await client.auth.signInWithPassword({
-    email,
-    password
-  });
+  if (inviteTokenFromURL || adminAccessToken) return;
 
-if (loginError || !data.session?.access_token) {
-  throw new Error('Não foi possível entrar. Confira o e-mail e a senha.');
+  const email = document.getElementById('admin-email')?.value.trim();
+  const password = document.getElementById('admin-password')?.value;
+  const error = document.getElementById('admin-error');
+  const button = document.getElementById('admin-submit');
+
+  if (!email || !password || !error || !button || button.disabled) return;
+
+  const generation = ++adminSessionGeneration;
+
+  const isCurrentAttempt = () =>
+    generation === adminSessionGeneration;
+
+  button.disabled = true;
+  button.textContent = 'Verificando acesso...';
+  error.textContent = '';
+
+  try {
+    const client = initializeSupabaseClient();
+
+    const { data, error: loginError } =
+      await client.auth.signInWithPassword({
+        email,
+        password
+      });
+
+    if (!isCurrentAttempt()) return;
+
+    if (loginError || !data.session?.access_token) {
+      throw new Error('Não foi possível entrar. Confira o e-mail e a senha.');
+    }
+
+    const { data: userData, error: userError } =
+      await client.auth.getUser();
+
+    if (!isCurrentAttempt()) return;
+
+    if (userError || !userData.user ||
+        userData.user.id !== ADMIN_USER_ID) {
+
+      const message = userError || !userData.user
+        ? 'Não foi possível confirmar a conta.'
+        : 'Esta conta não possui permissão de administração.';
+
+      await client.auth.signOut({ scope: 'local' });
+
+      if (!adminAccessToken) {
+        const currentError = document.getElementById('admin-error');
+        if (currentError) currentError.textContent = message;
+      }
+
+      return;
+    }
+
+    const { data: currentData, error: sessionError } =
+      await client.auth.getSession();
+
+    if (!isCurrentAttempt()) return;
+
+    if (
+      sessionError ||
+      !currentData.session?.access_token ||
+      currentData.session.user?.id !== ADMIN_USER_ID
+    ) {
+      throw new Error('Não foi possível confirmar a sessão administrativa.');
+    }
+
+    adminAccessToken = currentData.session.access_token;
+    adminEmail = userData.user.email || email;
+
+    await loadOnlineStoreStatus();
+
+    if (!isCurrentAttempt() || !adminAccessToken) return;
+
+    render();
+    loadRemoteProducts();
+
+  } catch (e) {
+    if (!isCurrentAttempt()) return;
+
+    const currentError = document.getElementById('admin-error');
+
+    if (currentError) {
+      currentError.textContent = e instanceof TypeError
+        ? 'Sem conexão com o Supabase. Tente novamente.'
+        : e.message;
+    }
+
+  } finally {
+    if (isCurrentAttempt() && !adminAccessToken) {
+      const currentButton = document.getElementById('admin-submit');
+
+      if (currentButton) {
+        currentButton.disabled = false;
+        currentButton.textContent = 'Entrar como administrador';
+      }
+    }
+  }
 }
 
-const { data: userData, error: userError } =
-  await client.auth.getUser();
 
-if (userError || !userData.user) {
-  await client.auth.signOut({ scope: 'local' });
-  throw new Error('Não foi possível confirmar a conta.');
-}
+   
+async function adminLogout() {
+  if (!adminAccessToken) return;
 
-const user = userData.user;
+  const generation = adminSessionGeneration;
 
-if (user.id !== ADMIN_USER_ID) {
-  await client.auth.signOut({ scope: 'local' });
-  throw new Error('Esta conta não possui permissão de administração.');
-}
-
-adminAccessToken = data.session.access_token;
-adminEmail = user.email || email;
-await loadOnlineStoreStatus();
-
-render();
-loadRemoteProducts();
-
- }catch(e){error.textContent=e instanceof TypeError?'Sem conexão com o Supabase. Tente novamente.':e.message;button.disabled=false;button.textContent='Entrar como administrador';}
-}
-
-   async function adminLogout(){
   try {
     const client = initializeSupabaseClient();
 
@@ -361,24 +439,38 @@ loadRemoteProducts();
 
     if (error) throw error;
 
+    if (generation !== adminSessionGeneration) return;
+
+    adminSessionGeneration++;
     adminAccessToken = null;
     adminEmail = '';
+
     onlineStoreOpen = null;
     onlineStoreStatus = 'unauthorized';
+    onlineStoreBusy = false;
+
     familyInviteToken = '';
+    inviteBusy = false;
+    inviteMessage = '';
+
     remoteEditId = null;
     remoteMessage = '';
+    remoteBusy = false;
 
     remoteRequest++;
     remoteProducts = [];
     remoteStatus = 'unauthorized';
 
+    closeConfirm();
     render();
 
   } catch (error) {
-    alert('Não foi possível confirmar o encerramento da sessão. Tente novamente.');
+    if (generation === adminSessionGeneration) {
+      alert('Não foi possível confirmar o encerramento da sessão. Tente novamente.');
+    }
   }
 }
+
 
 async function restoreAdminSession() {
   if (inviteTokenFromURL) return;
@@ -514,8 +606,15 @@ async function loadOnlineStoreStatus() {
   }
 }
 
+
 async function setOnlineStoreOpen(shouldOpen) {
-  if (!adminAccessToken) {
+  const generation = adminSessionGeneration;
+
+  const isCurrentSession = () =>
+    generation === adminSessionGeneration &&
+    Boolean(adminAccessToken);
+
+  if (!isCurrentSession()) {
     alert('Entre como administrador para alterar a lojinha online.');
     return false;
   }
@@ -538,23 +637,35 @@ async function setOnlineStoreOpen(shouldOpen) {
       }
     );
 
+    if (!isCurrentSession()) return false;
+
     if (!response.ok) {
       if (response.status === 401 || response.status === 403) {
         throw new Error('Acesso negado. Entre novamente como administrador.');
       }
+
       throw new Error('Não foi possível alterar o estado da lojinha.');
     }
 
     return true;
 
   } catch (error) {
-    alert(error.message || 'Erro de conexão com o Supabase.');
+    if (isCurrentSession()) {
+      alert(error.message || 'Erro de conexão com o Supabase.');
+    }
+
     return false;
   }
 }
 
 async function confirmOnlineStoreChange(shouldOpen) {
   if (!adminAccessToken || onlineStoreBusy) return;
+
+  const generation = adminSessionGeneration;
+
+  const isCurrentSession = () =>
+    generation === adminSessionGeneration &&
+    Boolean(adminAccessToken);
 
   if (onlineStoreStatus !== 'ready') {
     alert('Não foi possível confirmar o estado atual da lojinha. Atualize a consulta antes de alterar.');
@@ -572,13 +683,18 @@ async function confirmOnlineStoreChange(shouldOpen) {
     shouldOpen ? 'Sim, abrir lojinha' : 'Sim, fechar lojinha',
     'Cancelar',
     async () => {
-      if (onlineStoreBusy) return;
+      if (!isCurrentSession() || onlineStoreBusy) return;
 
       onlineStoreBusy = true;
 
       try {
         const success = await setOnlineStoreOpen(shouldOpen);
+
+        if (!isCurrentSession()) return;
+
         await loadOnlineStoreStatus();
+
+        if (!isCurrentSession()) return;
 
         if (success && onlineStoreStatus === 'ready') {
           alert(onlineStoreOpen === shouldOpen
@@ -586,8 +702,10 @@ async function confirmOnlineStoreChange(shouldOpen) {
             : 'Não foi possível confirmar a alteração. Confira o estado exibido.');
         }
       } finally {
-        onlineStoreBusy = false;
-        render();
+        if (isCurrentSession()) {
+          onlineStoreBusy = false;
+          render();
+        }
       }
     }
   );
@@ -596,8 +714,49 @@ async function confirmOnlineStoreChange(shouldOpen) {
 let inviteBusy = false;
 let inviteMessage = '';
 let familyInviteToken = '';
+
+
+
+async function copyFamilyInvite() {
+  const generation = adminSessionGeneration;
+
+  const isCurrentSession = () =>
+    generation === adminSessionGeneration &&
+    Boolean(adminAccessToken);
+
+  if (!isCurrentSession()) return;
+
+  if (!familyInviteToken) {
+    alert('Gere um convite primeiro.');
+    return;
+  }
+
+  const link = new URL('https://denisacoutinho-lang.github.io/evobrinque/');
+  link.searchParams.set('invite', familyInviteToken);
+
+  try {
+    await navigator.clipboard.writeText(link.toString());
+
+    if (!isCurrentSession()) return;
+
+    alert('Link do convite copiado!');
+
+  } catch (error) {
+    if (!isCurrentSession()) return;
+
+    window.prompt('Copie o link do convite:', link.toString());
+  }
+}
+
+
 async function generateFamilyInvite() {
   if (!adminAccessToken || inviteBusy) return;
+
+  const generation = adminSessionGeneration;
+
+  const isCurrentSession = () =>
+    generation === adminSessionGeneration &&
+    Boolean(adminAccessToken);
 
   inviteBusy = true;
   inviteMessage = 'Gerando convite...';
@@ -619,45 +778,37 @@ async function generateFamilyInvite() {
       }
     );
 
+    if (!isCurrentSession()) return;
+
     if (!response.ok) {
       throw new Error('Não foi possível gerar o convite.');
     }
 
-    
-const token = await response.json();
+    const token = await response.json();
 
-if (typeof token !== 'string' || !/^[a-f0-9]{64}$/.test(token)) {
-  throw new Error('O Supabase retornou um convite inválido.');
-}
+    if (!isCurrentSession()) return;
 
-familyInviteToken = token;
-inviteMessage = 'Convite gerado com sucesso!';
-render();
-
-  } catch (error) {
-    inviteMessage = error.message;
-  } finally {
-    inviteBusy = false;
-    alert(inviteMessage);
+    if (typeof token !== 'string' || !/^[a-f0-9]{64}$/.test(token)) {
+      throw new Error('O Supabase retornou um convite inválido.');
     }
-}
 
-async function copyFamilyInvite() {
-  if (!familyInviteToken) {
-    alert('Gere um convite primeiro.');
-    return;
-  }
+    familyInviteToken = token;
+    inviteMessage = 'Convite gerado com sucesso!';
+    render();
 
-  const link = new URL('https://denisacoutinho-lang.github.io/evobrinque/');
- link.searchParams.set('invite', familyInviteToken);
-
-  try {
-    await navigator.clipboard.writeText(link.toString());
-    alert('Link do convite copiado!');
   } catch (error) {
-    window.prompt('Copie o link do convite:', link.toString());
+    if (isCurrentSession()) {
+      inviteMessage = error.message;
+    }
+ 
+  } finally {
+    if (isCurrentSession()) {
+      inviteBusy = false;
+      alert(inviteMessage);
+    }
   }
 }
+
 
  
 // V1.7: administração de produtos compartilhados. Não altera pedidos ou produtos locais.
@@ -670,44 +821,130 @@ function remoteAdminHTML(){
 }
 function remoteStartEdit(id){remoteEditId=id;remoteMessage='';render();document.getElementById('remote-name')?.focus()}
 function remoteCancelEdit(){remoteEditId=null;remoteMessage='';render()}
-async function remoteSave(){
- if(remoteBusy||!adminAccessToken)return;
- const name=document.getElementById('remote-name')?.value.trim();
- const priceText=document.getElementById('remote-price')?.value;
- const stockText=document.getElementById('remote-stock')?.value;
- const msg=document.getElementById('remote-admin-message');
- if(!name||name.length>80||priceText===''||!validPrice(priceText)||stockText===''||!validQty(stockText)){if(msg)msg.textContent='Confira nome, preço (até duas casas) e estoque inteiro.';return}
- if(remoteStatus!=='ready'){if(msg)msg.textContent='Atualize a lista online antes de salvar.';return}
- if(remoteEditId===null&&remoteProducts.some(p=>p.name.trim().toLocaleLowerCase('pt-BR')===name.toLocaleLowerCase('pt-BR'))){if(msg)msg.textContent='Já existe um produto online com esse nome. Use Editar para evitar duplicação.';return}
- const editing=remoteEditId!==null;
- if(editing&&!remoteProducts.some(p=>p.id===remoteEditId)){if(msg)msg.textContent='Produto não encontrado. Atualize a lista.';return}
- const button=document.getElementById('remote-save');remoteBusy=true;if(button){button.disabled=true;button.textContent='Salvando online...'}
- try{
-  const url=SUPABASE_URL+'/rest/v1/products'+(editing?'?id=eq.'+encodeURIComponent(remoteEditId):'');
-  
-const response = await fetch(url, {
-  method: editing ? 'PATCH' : 'POST',
-  headers: {
-    'apikey': SUPABASE_PUBLISHABLE_KEY,
-    'Authorization': 'Bearer ' + adminAccessToken,
-    'Content-Type': 'application/json',
-    'Prefer': 'return=representation'
-  },
-  body: JSON.stringify({
-    name,
-    price: Number(priceText),
-    stock: Number(stockText),
-    ...(!editing ? { is_active: true, store_id: 1 } : {})
-  }),
-  cache: 'no-store'
-});
 
-  if(!response.ok){if(response.status===401)throw new Error('Sua sessão expirou. Saia da conta e entre novamente.');throw new Error('Não foi possível salvar no Supabase (HTTP '+response.status+').')}
-  const result=await response.json();if(!Array.isArray(result)||result.length!==1)throw new Error('Não foi possível confirmar a gravação. Atualize a lista antes de tentar novamente.');
-  remoteEditId=null;remoteMessage='✅ Produto salvo no Supabase!';await loadRemoteProducts();render();
- }catch(e){remoteMessage=e.message||'Falha de conexão. Confira a lista antes de tentar novamente.';if(msg)msg.textContent=remoteMessage}
- finally{remoteBusy=false;if(button){button.disabled=false;button.textContent=editing?'💾 Salvar alterações online':'💾 Cadastrar online'}}
+async function remoteSave() {
+  if (remoteBusy || !adminAccessToken) return;
+
+  const generation = adminSessionGeneration;
+
+  const isCurrentSession = () =>
+    generation === adminSessionGeneration &&
+    Boolean(adminAccessToken);
+
+  const name = document.getElementById('remote-name')?.value.trim();
+  const priceText = document.getElementById('remote-price')?.value;
+  const stockText = document.getElementById('remote-stock')?.value;
+  const msg = document.getElementById('remote-admin-message');
+
+  if (!name || name.length > 80 ||
+      priceText === '' || !validPrice(priceText) ||
+      stockText === '' || !validQty(stockText)) {
+    if (msg) msg.textContent = 'Confira nome, preço (até duas casas) e estoque inteiro.';
+    return;
+  }
+
+  if (remoteStatus !== 'ready') {
+    if (msg) msg.textContent = 'Atualize a lista online antes de salvar.';
+    return;
+  }
+
+  if (remoteEditId === null && remoteProducts.some(
+    p => p.name.trim().toLocaleLowerCase('pt-BR') ===
+         name.toLocaleLowerCase('pt-BR')
+  )) {
+    if (msg) msg.textContent = 'Já existe um produto online com esse nome. Use Editar para evitar duplicação.';
+    return;
+  }
+
+  const editing = remoteEditId !== null;
+
+  if (editing && !remoteProducts.some(p => p.id === remoteEditId)) {
+    if (msg) msg.textContent = 'Produto não encontrado. Atualize a lista.';
+    return;
+  }
+
+  const button = document.getElementById('remote-save');
+  remoteBusy = true;
+
+  if (button) {
+    button.disabled = true;
+    button.textContent = 'Salvando online...';
+  }
+
+  try {
+    const url = SUPABASE_URL + '/rest/v1/products' +
+      (editing ? '?id=eq.' + encodeURIComponent(remoteEditId) : '');
+
+    const response = await fetch(url, {
+      method: editing ? 'PATCH' : 'POST',
+      headers: {
+        'apikey': SUPABASE_PUBLISHABLE_KEY,
+        'Authorization': 'Bearer ' + adminAccessToken,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation'
+      },
+      body: JSON.stringify({
+        name,
+        price: Number(priceText),
+        stock: Number(stockText),
+        ...(!editing ? {
+          is_active: true,
+          store_id: ACTIVE_STORE_ID
+        } : {})
+      }),
+      cache: 'no-store'
+    });
+
+    if (!isCurrentSession()) return;
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error('Sua sessão expirou. Saia da conta e entre novamente.');
+      }
+      throw new Error('Não foi possível salvar no Supabase (HTTP ' + response.status + ').');
+    }
+
+    const result = await response.json();
+
+    if (!isCurrentSession()) return;
+
+    if (!Array.isArray(result) || result.length !== 1) {
+      throw new Error('Não foi possível confirmar a gravação. Atualize a lista antes de tentar novamente.');
+    }
+
+    remoteEditId = null;
+    remoteMessage = '✅ Produto salvo no Supabase!';
+
+    await loadRemoteProducts();
+
+    if (!isCurrentSession()) return;
+
+    render();
+
+  } catch (e) {
+    if (isCurrentSession()) {
+      remoteMessage = e.message ||
+        'Falha de conexão. Confira a lista antes de tentar novamente.';
+
+      if (msg) msg.textContent = remoteMessage;
+    }
+  } finally {
+  
+    if (isCurrentSession()) {
+      remoteBusy = false;
+
+      const currentButton = document.getElementById('remote-save');
+
+      if (currentButton) {
+        currentButton.disabled = false;
+        currentButton.textContent = remoteEditId !== null
+          ? '💾 Salvar alterações online'
+          : '💾 Cadastrar online';
+      }
+    }
+  }
 }
+
 const STORAGE_KEY='evobrinque_produtos_v12';
 const demoProducts=[{name:'Carrinho',emoji:'🚗',price:12,stock:4},{name:'Chocolate',emoji:'🍫',price:8,stock:6},{name:'Bola',emoji:'⚽',price:10,stock:2},{name:'Livro de histórias',emoji:'📚',price:18,stock:3}];
 let products=[];
