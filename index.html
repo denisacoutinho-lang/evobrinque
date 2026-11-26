@@ -214,6 +214,8 @@ async function loadRemoteProducts() {
       const { data: sessionData, error: sessionError } =
         await client.auth.getSession();
 
+      if (request !== remoteRequest || !adminAccessToken) return;
+
       if (
         sessionError ||
         !sessionData.session ||
@@ -285,6 +287,24 @@ function updateRemotePanel(){const panel=document.getElementById('remote-product
 // V1.6: autenticação administrativa; senha nunca é armazenada.
 const ADMIN_USER_ID='049b07ca-d164-4279-a74f-871cf2f6436f';
 let adminAccessToken=null,adminEmail='';
+// Uma operação administrativa de autenticação por vez, nesta página.
+let adminAuthOperation = null;
+function updateAdminAuthControls() {
+  const login = document.getElementById('admin-submit');
+  const logout = document.getElementById('admin-logout');
+  if (login) {
+    login.disabled = Boolean(adminAuthOperation);
+    login.textContent = adminAuthOperation ? 'Aguarde, verificando acesso...' : 'Entrar como administrador';
+  }
+  if (logout) {
+    logout.disabled = Boolean(adminAuthOperation);
+    logout.textContent = adminAuthOperation === 'logout' ? 'Encerrando sessão...' : 'Sair da conta';
+  }
+}
+function finishAdminAuthOperation() {
+  adminAuthOperation = null;
+  updateAdminAuthControls();
+}
 function adminPanelHTML(){
  
 if(adminAccessToken)return `<section class="card admin-login">
@@ -313,16 +333,16 @@ if(adminAccessToken)return `<section class="card admin-login">
 <button class="button secondary" onclick="generateFamilyInvite()">🔗 Gerar convite para familiares</button>
 
 ${familyInviteToken ? '<button class="button secondary" onclick="copyFamilyInvite()">📋 Copiar convite</button>' : ''}
-<button class="button secondary" onclick="adminLogout()">Sair da conta</button>
+<button class="button secondary" id="admin-logout" onclick="adminLogout()" ${adminAuthOperation ? 'disabled' : ''}>${adminAuthOperation === 'logout' ? 'Encerrando sessão...' : 'Sair da conta'}</button>
 
 </section>`;
- return `<section class="card admin-login"><h2>🔐 Acesso administrativo</h2><p class="muted">Entre com a conta administrativa já criada no Supabase. Os produtos locais continuam funcionando normalmente.</p><form onsubmit="adminLogin(event)"><div class="field"><label for="admin-email">E-mail</label><input id="admin-email" type="email" autocomplete="username" required maxlength="254" placeholder="E-mail da conta administrativa"></div><div class="field"><label for="admin-password">Senha</label><input id="admin-password" type="password" autocomplete="current-password" required placeholder="Senha da conta administrativa"></div><p class="admin-error" id="admin-error" role="alert"></p><button class="button" id="admin-submit" type="submit">Entrar como administrador</button></form><p class="tiny">A senha não é salva neste aparelho.</p></section>`;
+ return `<section class="card admin-login"><h2>🔐 Acesso administrativo</h2><p class="muted">Entre com a conta administrativa já criada no Supabase. Os produtos locais continuam funcionando normalmente.</p><form onsubmit="adminLogin(event)"><div class="field"><label for="admin-email">E-mail</label><input id="admin-email" type="email" autocomplete="username" required maxlength="254" placeholder="E-mail da conta administrativa"></div><div class="field"><label for="admin-password">Senha</label><input id="admin-password" type="password" autocomplete="current-password" required placeholder="Senha da conta administrativa"></div><p class="admin-error" id="admin-error" role="alert"></p><button class="button" id="admin-submit" type="submit" ${adminAuthOperation ? 'disabled' : ''}>${adminAuthOperation ? 'Aguarde, verificando acesso...' : 'Entrar como administrador'}</button></form><p class="tiny">A senha não é salva neste aparelho.</p></section>`;
 }
 
 async function adminLogin(event) {
   event.preventDefault();
 
-  if (inviteTokenFromURL || adminAccessToken) return;
+  if (inviteTokenFromURL || adminAccessToken || adminAuthOperation) return;
 
   const email = document.getElementById('admin-email')?.value.trim();
   const password = document.getElementById('admin-password')?.value;
@@ -331,6 +351,7 @@ async function adminLogin(event) {
 
   if (!email || !password || !error || !button || button.disabled) return;
 
+  adminAuthOperation = 'login';
   const generation = ++adminSessionGeneration;
 
   const isCurrentAttempt = () =>
@@ -412,22 +433,17 @@ async function adminLogin(event) {
     }
 
   } finally {
-    if (isCurrentAttempt() && !adminAccessToken) {
-      const currentButton = document.getElementById('admin-submit');
-
-      if (currentButton) {
-        currentButton.disabled = false;
-        currentButton.textContent = 'Entrar como administrador';
-      }
-    }
+    finishAdminAuthOperation();
   }
 }
 
 
    
 async function adminLogout() {
-  if (!adminAccessToken) return;
+  if (!adminAccessToken || adminAuthOperation) return;
 
+  adminAuthOperation = 'logout';
+  updateAdminAuthControls();
   const generation = adminSessionGeneration;
 
   try {
@@ -468,14 +484,18 @@ async function adminLogout() {
     if (generation === adminSessionGeneration) {
       alert('Não foi possível confirmar o encerramento da sessão. Tente novamente.');
     }
+  } finally {
+    finishAdminAuthOperation();
   }
 }
 
 
 
 async function restoreAdminSession() {
-  if (inviteTokenFromURL || adminAccessToken) return;
+  if (inviteTokenFromURL || adminAccessToken || adminAuthOperation) return;
 
+  adminAuthOperation = 'restore';
+  updateAdminAuthControls();
   const generation = adminSessionGeneration;
 
   const isCurrentAttempt = () =>
@@ -531,6 +551,8 @@ async function restoreAdminSession() {
     onlineStoreOpen = null;
     onlineStoreStatus = 'unauthorized';
     render();
+  } finally {
+    finishAdminAuthOperation();
   }
 }
 
@@ -1607,4 +1629,3 @@ if (inviteTokenFromURL) {
 </script></body></html>
 
 <!-- EVOBRINQUE - tentativa de republicacao do Passo 511 -->
-
