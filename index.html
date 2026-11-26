@@ -472,18 +472,28 @@ async function adminLogout() {
 }
 
 
+
 async function restoreAdminSession() {
-  if (inviteTokenFromURL) return;
+  if (inviteTokenFromURL || adminAccessToken) return;
+
+  const generation = adminSessionGeneration;
+
+  const isCurrentAttempt = () =>
+    generation === adminSessionGeneration;
 
   try {
     const client = initializeSupabaseClient();
 
     const { data, error } = await client.auth.getSession();
 
+    if (!isCurrentAttempt()) return;
+
     if (error || !data.session) return;
 
     const { data: userData, error: userError } =
       await client.auth.getUser();
+
+    if (!isCurrentAttempt()) return;
 
     if (userError || !userData.user) return;
 
@@ -495,23 +505,35 @@ async function restoreAdminSession() {
     const { data: currentData, error: sessionError } =
       await client.auth.getSession();
 
-    if (sessionError || !currentData.session) return;
+    if (!isCurrentAttempt()) return;
+
+    if (
+      sessionError ||
+      !currentData.session?.access_token ||
+      currentData.session.user?.id !== ADMIN_USER_ID
+    ) return;
 
     adminAccessToken = currentData.session.access_token;
     adminEmail = userData.user.email || '';
 
     await loadOnlineStoreStatus();
+
+    if (!isCurrentAttempt() || !adminAccessToken) return;
+
     render();
     loadRemoteProducts();
 
   } catch (error) {
+    if (!isCurrentAttempt()) return;
+
     adminAccessToken = null;
     adminEmail = '';
     onlineStoreOpen = null;
     onlineStoreStatus = 'unauthorized';
     render();
   }
-} 
+}
+
 const ACTIVE_STORE_ID = 1;
 // Estado da lojinha online, consultado no Supabase.
 let onlineStoreOpen = null;
