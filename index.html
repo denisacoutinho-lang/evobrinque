@@ -566,9 +566,10 @@ let onlineStoreBusy = false;
 async function loadOnlineStoreStatus() {
   const generation = adminSessionGeneration;
   const isGuest = Boolean(inviteTokenFromURL);
+  const guestGeneration = familyInviteGeneration;
 
   const isCurrentSession = () =>
-    isGuest || (
+    (isGuest && guestGeneration === familyInviteGeneration && inviteValidationStatus === 'valid' && familyGuestEntered) || (!isGuest &&
       generation === adminSessionGeneration &&
       Boolean(adminAccessToken)
     );
@@ -626,6 +627,11 @@ async function loadOnlineStoreStatus() {
     const rows = await response.json();
 
     if (!isCurrentSession()) return;
+
+    if (isGuest && Array.isArray(rows) && rows.length === 0) {
+      await validateFamilyInvite();
+      if (!isCurrentSession()) return;
+    }
 
     if (!Array.isArray(rows) || rows.length !== 1 ||
         typeof rows[0].is_open !== 'boolean') {
@@ -1457,19 +1463,21 @@ function performArchiveProduct(){
 
 
 function render(){
- if (inviteTokenFromURL && !familyGuestEntered) {
+ if (inviteTokenFromURL && (!familyGuestEntered || inviteValidationStatus !== 'valid')) {
     const message = inviteValidationStatus === 'pending'
       ? 'Verificando seu convite...'
       : inviteValidationStatus === 'valid'
        ? 'Que bom ter você aqui!'
-        : 'Este convite é inválido, expirou ou foi revogado. Peça um novo convite ao responsável.';
+        : inviteValidationStatus === 'error'
+          ? 'Não foi possível verificar seu convite. Confira a conexão e tente novamente.'
+          : 'Este convite é inválido, expirou ou foi revogado. Peça um novo convite ao responsável.';
 
     root.innerHTML =
       '<section class="card">' +
       '<h2>🏪 ' + (inviteValidationStatus === 'valid' && invitedStore ? escapeHTML(invitedStore.store_name) : 'Convite familiar') + '</h2>' +
       '<p class="muted">' + message + '</p>' +
      (inviteValidationStatus === 'valid' ? '<div class="field"><label for="family-guest-name">Como podemos te chamar?</label><input id="family-guest-name" maxlength="35" placeholder="Digite seu nome ou apelido"></div>' : '') +
-     (inviteValidationStatus === 'valid' ? '<button class="button" onclick="enterFamilyShop()">Entrar na lojinha</button>' : '') +
+     (inviteValidationStatus === 'valid' ? '<button class="button" onclick="enterFamilyShop()">Entrar na lojinha</button>' : inviteValidationStatus === 'error' ? '<button class="button" onclick="validateFamilyInvite()">Tentar novamente</button>' : '') +
       '</section>';
 
     return;
@@ -1570,58 +1578,75 @@ loadRemoteProducts();
 }
 
 
-async function validateFamilyInvite() {
-  if (!inviteTokenFromURL) return;
+let familyInviteGeneration = 0;
+let familyInviteCheckBusy = false;
 
-  inviteValidationStatus = 'pending';
+function suspendFamilyAccess(status) {
+  familyInviteGeneration++;
+  remoteRequest++;
+  inviteValidationStatus = status;
   invitedStore = null;
-
-  try {
-    if (!/^[a-f0-9]{64}$/.test(inviteTokenFromURL)) {
-      throw new Error('Convite inválido.');
-    }
-
-    const response = await fetch(
-      SUPABASE_URL + '/rest/v1/rpc/get_invited_store',
-      {
-        method: 'POST',
-        headers: {
-          'apikey': SUPABASE_PUBLISHABLE_KEY,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          p_token: inviteTokenFromURL
-        }),
-        cache: 'no-store'
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error('Falha ao verificar convite.');
-    }
-
-    const result = await response.json();
-
-    if (!Array.isArray(result) || result.length !== 1) {
-      throw new Error('Convite inválido ou expirado.');
-    }
-
-    invitedStore = result[0];
-    inviteValidationStatus = 'valid';
-
-
-} catch (error) {
-  invitedStore = null;
-  inviteValidationStatus = 'invalid';
+  familyGuestEntered = false;
+  familyGuestName = '';
+  remoteProducts = [];
+  remoteStatus = 'unauthorized';
+  onlineStoreOpen = null;
+  onlineStoreStatus = 'unauthorized';
+  onlineCartNotice = '';
+  if (status === 'invalid') {
+    onlineCart = {};
+    try { localStorage.removeItem(ONLINE_CART_KEY); } catch (e) {}
+  }
+  closeConfirm();
+  render();
 }
 
-render();
+async function validateFamilyInvite() {
+  if (!inviteTokenFromURL || familyInviteCheckBusy || inviteValidationStatus === 'invalid') return;
+  familyInviteCheckBusy = true;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000);
+  try {
+    if (!/^[a-f0-9]{64}$/.test(inviteTokenFromURL)) {
+      suspendFamilyAccess('invalid');
+      return;
+    }
+    const response = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_invited_store', {
+      method: 'POST',
+      headers: {'apikey': SUPABASE_PUBLISHABLE_KEY, 'Content-Type': 'application/json'},
+      body: JSON.stringify({p_token: inviteTokenFromURL}),
+      cache: 'no-store',
+      signal: controller.signal
+    });
+    if (!response.ok) throw new Error('Falha ao verificar convite.');
+    const result = await response.json();
+    if (!Array.isArray(result)) throw new Error('Resposta inválida.');
+    if (result.length === 0) {
+      suspendFamilyAccess('invalid');
+      return;
+    }
+    if (result.length !== 1 || !result[0]?.store_id) throw new Error('Resposta inválida.');
+    const wasValid = inviteValidationStatus === 'valid';
+    invitedStore = result[0];
+    inviteValidationStatus = 'valid';
+    if (!wasValid) render();
+  } catch (error) {
+    suspendFamilyAccess('error');
+  } finally {
+    clearTimeout(timeout);
+    familyInviteCheckBusy = false;
+  }
 }
 
 render();
 
 if (inviteTokenFromURL) {
   validateFamilyInvite();
+  setInterval(validateFamilyInvite, 30000);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') validateFamilyInvite();
+  });
+  window.addEventListener('focus', validateFamilyInvite);
 } else {
   restoreAdminSession();
 }
