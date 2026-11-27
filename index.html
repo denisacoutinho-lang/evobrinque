@@ -1071,6 +1071,7 @@ function onlineCartUnits() {
 }
 
   function addOnlineCart(productId) {
+   if (onlineOrderBusy) return false;
   if (onlineStoreStatus !== 'ready' || onlineStoreOpen !== true) {
     onlineCartNotice = 'A lojinha online está fechada ou indisponível.';
     return false;
@@ -1107,6 +1108,7 @@ function onlineCartUnits() {
 }
 
 function removeOnlineCart(productId) {
+   if (onlineOrderBusy) return false;
   const id = String(productId);
   const current = Number(onlineCart[id] || 0);
 
@@ -1186,87 +1188,77 @@ function cartView(){
 // Nenhum pedido é enviado ao Supabase nesta etapa.
 
 
+// 691.2: integracao preparada; liberacao depende de validacao posterior.
+const ONLINE_ORDER_ENABLED = false;
+let onlineOrderBusy = false;
+let onlineOrderNotice = '';
+let onlineOrderReceipt = null;
 async function validateOnlineCheckout() {
-  
-const verifyButton = document.querySelector(
-  'button[onclick="validateOnlineCheckout()"]'
-);
-if (verifyButton?.disabled) return;
-if (verifyButton) verifyButton.disabled = true;
-
-try {
-  await loadOnlineStoreStatus();
-} catch (error) {
-  onlineStoreStatus = 'error';
-  onlineStoreOpen = null;
-}
-  
-
-try {
-
-  const buyer = document.getElementById('online-buyer-name')?.value.trim();
-  const message = document.getElementById('online-checkout-message');
-
-  if (!message) return;
-  
-  if (onlineStoreStatus !== 'ready' || onlineStoreOpen !== true) {
-    message.textContent = '⚠️ A lojinha online está fechada ou indisponível. Não é possível continuar com o pedido.';
-    return;
-  }
-
-
-  if (!buyer || buyer.length < 2 || buyer.length > 35) {
-    message.textContent = '⚠️ Digite um apelido de 2 a 35 caracteres.';
-    return;
-  }
-
-  if (remoteStatus !== 'ready') {
-    message.textContent = '⚠️ Aguarde a atualização dos produtos online.';
-    return;
-  }
-
-  const entries = Object.entries(onlineCart);
-
-  if (!entries.length) {
-    message.textContent = '⚠️ Seu carrinho está vazio.';
-    return;
-  }
-
-  if (entries.length > 30) {
-    message.textContent = '⚠️ O carrinho permite até 30 produtos diferentes.';
-    return;
-  }
-
-  for (const [id, quantity] of entries) {
-    const product = remoteProducts.find(p => String(p.id) === id);
-
-if (!product || product.is_active === false) {
-      message.textContent = '⚠️ Existe um produto indisponível no carrinho.';
+  if (onlineOrderBusy || !inviteTokenFromURL || !familyGuestEntered ||
+      inviteValidationStatus !== 'valid' || !invitedStore) return;
+  const generation = familyInviteGeneration;
+  const current = () => generation === familyInviteGeneration &&
+    familyGuestEntered && inviteValidationStatus === 'valid';
+  const buyer = familyGuestName.trim();
+  onlineOrderBusy = true;
+  onlineOrderNotice = 'Verificando seu pedido...';
+  render();
+  try {
+    await loadOnlineStoreStatus();
+    if (!current()) return;
+    if (onlineStoreStatus !== 'ready' || onlineStoreOpen !== true)
+      throw new Error('A lojinha está fechada ou indisponível.');
+    await loadRemoteProducts();
+    if (!current()) return;
+    if (remoteStatus !== 'ready') throw new Error('Não foi possível atualizar os produtos.');
+    if (buyer.length < 2 || buyer.length > 35) throw new Error('Apelido inválido.');
+    const entries = Object.entries(onlineCart);
+    if (!entries.length || entries.length > 30) throw new Error('Escolha de 1 a 30 produtos diferentes.');
+    const items = entries.map(([id, quantity]) => {
+      const product = remoteProducts.find(p => String(p.id) === id);
+      if (!product || product.is_active === false || !/^[0-9]{1,15}$/.test(id) || Number(id)<1 ||
+          !Number.isInteger(quantity) || quantity<1 || quantity>100 || quantity>Number(product.stock))
+        throw new Error('Confira os produtos e quantidades disponíveis no carrinho.');
+      return {product_id:Number(id), quantity};
+    }).sort((a,b)=>a.product_id-b.product_id);
+    if (!ONLINE_ORDER_ENABLED) {
+      onlineOrderNotice = 'Pedido verificado! O envio online ainda está desativado.';
       return;
     }
-
-    if (!Number.isInteger(quantity) || quantity < 1 || quantity > 100) {
-      message.textContent = '⚠️ Existe uma quantidade inválida no carrinho.';
-      return;
+    // O identificador e o conteudo ficam congelados ate confirmacao.
+    const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(inviteTokenFromURL));
+    if (!current()) return;
+    const key = 'evobrinque_pending_' + Array.from(new Uint8Array(digest), b=>b.toString(16).padStart(2,'0')).join('');
+    const payload = JSON.stringify({buyer,items});
+    let pending = JSON.parse(localStorage.getItem(key) || 'null');
+    if (pending && pending.payload !== payload)
+      throw new Error('Existe um pedido anterior sem confirmação. Peça ajuda ao responsável antes de continuar.');
+    if (!pending) {
+      pending = {id:crypto.randomUUID(),payload};
+      localStorage.setItem(key,JSON.stringify(pending));
     }
-
-    if (quantity > Number(product.stock)) {
-      message.textContent = '⚠️ Estoque insuficiente para ' + product.name + '.';
-      return;
-    }
+    const response = await fetch(SUPABASE_URL+'/rest/v1/rpc/create_invited_play_order', {
+      method:'POST',headers:{apikey:SUPABASE_PUBLISHABLE_KEY,'Content-Type':'application/json'},
+      body:JSON.stringify({p_token:inviteTokenFromURL,p_customer_name:buyer,p_items:items,p_request_id:pending.id}),cache:'no-store'
+    });
+    if (!response.ok) throw new Error('Não foi possível confirmar o pedido. Não faça um novo pedido antes de conferir com o responsável.');
+    const receipt = await response.json();
+    if (!Number.isSafeInteger(receipt) || receipt<1) throw new Error('Confirmação indisponível. Peça ajuda ao responsável.');
+    if (!current()) return;
+    onlineCart = {};
+    if (!saveOnlineCart()) throw new Error('Pedido recebido, mas não foi possível limpar o carrinho. Peça ajuda ao responsável.');
+    localStorage.removeItem(key);
+    onlineOrderReceipt = receipt;
+    onlineOrderNotice = 'Pedido confirmado! Número '+receipt+'.';
+    await loadRemoteProducts();
+  } catch (error) {
+    if (current()) onlineOrderNotice = error instanceof TypeError ? 'Conexão indisponível. Confira com o responsável antes de repetir o pedido.' : (error.message || 'Não foi possível verificar o pedido.');
+  } finally {
+    onlineOrderBusy = false;
+    if (current() && page === 'online-checkout') render();
   }
-
-  
-  
-message.textContent =
-  '✅ Apelido, produtos e quantidades verificados! O envio de pedidos continua desativado.';
-} finally {
-  if (verifyButton?.isConnected) verifyButton.disabled = false;
-}
 }
 
-
- 
 function onlineCartView() {
   const selected = remoteProducts.filter(
     p => Number(onlineCart[String(p.id)] || 0) > 0
@@ -1309,7 +1301,7 @@ function onlineCartView() {
         '<p class="muted">Pedido fictício, sem pagamento real.</p>' +
         
 '<button class="button" ' +
-(onlineStoreStatus !== 'ready' || onlineStoreOpen !== true ? 'disabled ' : '') +
+(!inviteTokenFromURL || onlineStoreStatus !== 'ready' || onlineStoreOpen !== true ? 'disabled ' : '') +
 'onclick="go(\'online-checkout\')">' +
 (onlineStoreStatus !== 'ready' || onlineStoreOpen !== true
   ? '🔒 Lojinha fechada — pedidos indisponíveis'
@@ -1389,6 +1381,8 @@ const money=v=>Number(v).toLocaleString('pt-BR',{style:'currency',currency:'BRL'
 const root=document.getElementById('view');
 const header=name=>`<div class="top"><button class="back" onclick="go('${inviteTokenFromURL ? 'preview' : 'home'}')" aria-label="Voltar">←</button><h1>${name}</h1></div>`;
 function go(p){
+   if (onlineOrderBusy) return;
+   if (p === "online-checkout") { onlineOrderNotice = ""; onlineOrderReceipt = null; }
   if (inviteTokenFromURL && (!familyGuestEntered || !['preview','cart','online-checkout'].includes(p))) return;
   page=p;
   render();
@@ -1514,10 +1508,10 @@ if(page==='online-checkout'){
     '<h2>🛒 Quase lá!</h2>'+
     '<p class="muted">Informe seu apelido para identificar o pedido de brincadeira.</p>'+
     '<div class="field"><label for="online-buyer-name">Seu apelido</label>'+
-    '<input id="online-buyer-name" maxlength="35" placeholder="Ex.: Papai, Vovó, Tia Ana"></div>'+
+    '<input id="online-buyer-name" readonly value="'+escapeHTML(familyGuestName)+'"></div>'+
     '<div class="cart-total"><span>Total de brincadeira</span><span>'+money(total)+'</span></div>'+
-    '<p class="note" id="online-checkout-message" role="status" aria-live="polite">Estamos preparando a confirmação dos pedidos online. Nenhum pedido será enviado nesta etapa.</p>'+
-   '<button class="button" onclick="validateOnlineCheckout()">Verificar meu pedido ✓</button>'+
+    '<p class="note" id="online-checkout-message" role="status" aria-live="polite">'+escapeHTML(onlineOrderNotice || 'Nenhum pedido será enviado nesta etapa.')+'</p>'+
+   '<button class="button" '+(onlineOrderBusy || !inviteTokenFromURL || onlineOrderReceipt ? 'disabled ' : '')+'onclick="validateOnlineCheckout()">'+(onlineOrderBusy?'Aguarde...':'Verificar meu pedido ✓')+'</button>'+
     '<button class="button secondary" onclick="go(\'cart\')">← Voltar ao carrinho</button>'+
     '</section>';
 }
@@ -1593,6 +1587,8 @@ function suspendFamilyAccess(status) {
   onlineStoreOpen = null;
   onlineStoreStatus = 'unauthorized';
   onlineCartNotice = '';
+  onlineOrderNotice = '';
+  onlineOrderReceipt = null;
   if (status === 'invalid') {
     onlineCart = {};
     try { localStorage.removeItem(ONLINE_CART_KEY); } catch (e) {}
